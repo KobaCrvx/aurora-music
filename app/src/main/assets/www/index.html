@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e0b22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Aurora Music</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-skin="modern" data-theme="dark" data-trans="fade" data-view="lib">
+<div id="bg" aria-hidden="true"></div>
+<div id="fx" aria-hidden="true"></div>
+<button id="chrome-btn" data-ico="menu" aria-label="Menu"></button>
+
+<div class="app">
+  <main id="main">
+
+    <!-- BIBLIOTECA -->
+    <section id="v-lib" class="view">
+      <header class="vh">
+        <h1 data-i18n="lib"></h1>
+        <div class="row wrap">
+          <button class="btn pri" id="btn-import"><span data-ico="plus"></span><span data-i18n="import"></span></button>
+          <button class="btn" id="btn-url" data-i18n="url"></button>
+          <button class="btn" id="btn-disc" data-i18n="discBtn"></button>
+          <button class="btn pri" id="btn-install" data-i18n="instBtn" hidden></button>
+          <button class="btn" id="btn-remote" data-i18n="remBtn" data-i18n-title="remTip" hidden></button>
+        </div>
+      </header>
+      <input id="q" type="search" data-i18n-ph="search" autocomplete="off">
+      <div id="tracks" class="list"></div>
+    </section>
+
+    <!-- PLAYLISTS -->
+    <section id="v-pls" class="view" hidden>
+      <header class="vh">
+        <h1 data-i18n="pls"></h1>
+        <button class="btn pri" id="btn-newpl"><span data-ico="plus"></span><span data-i18n="newpl"></span></button>
+      </header>
+      <div id="pls" class="grid"></div>
+    </section>
+
+    <!-- DETALLE DE PLAYLIST -->
+    <section id="v-pl" class="view" hidden>
+      <header class="vh">
+        <button class="btn" id="pl-back" data-ico="back" aria-label="Back"></button>
+        <h1 id="pl-name"></h1>
+      </header>
+      <div class="plhead">
+        <img id="pl-cover" alt="">
+        <div class="row wrap">
+          <button class="btn pri" id="pl-play" data-i18n="playall"></button>
+          <button class="btn" id="pl-cov" data-i18n="cover"></button>
+          <button class="btn" id="pl-ren" data-i18n="ren"></button>
+          <button class="btn danger" id="pl-del" data-i18n="del"></button>
+        </div>
+      </div>
+      <div id="pl-tracks" class="list"></div>
+    </section>
+
+    <!-- REPRODUCTOR -->
+    <section id="v-player" class="view" hidden>
+
+      <div class="skinbar">
+        <div class="chips" data-set="skin">
+          <button data-v="modern" data-i18n="s1"></button>
+          <button data-v="turntable" data-i18n="s2"></button>
+          <button data-v="mp3" data-i18n="s3"></button>
+          <button data-v="display" data-i18n="s4"></button>
+        </div>
+        <div class="row wrap">
+          <button class="btn" id="btn-clean"><span data-ico="expand"></span><span data-i18n="clean"></span></button>
+          <button class="btn" id="btn-decor"><span data-ico="brush"></span><span data-i18n="decor"></span></button>
+          <button class="btn" id="btn-pip"><span data-ico="pip"></span><span data-i18n="mini"></span></button>
+        </div>
+      </div>
+
+      <div id="pip-note" class="pipnote" hidden>
+        <span data-i18n="miniNote"></span>
+        <button class="btn" id="btn-pipback" data-i18n="miniBack"></button>
+      </div>
+
+      <!-- Todo lo visible del reproductor vive en #stage (es lo que se mueve a la ventana flotante) -->
+      <div id="stage">
+
+        <!-- Skin moderno -->
+        <div class="skin skin-modern">
+          <div class="coverwrap">
+            <img class="b-cover big-cover" alt="">
+            <div class="stk-layer" data-stk="modern"></div>
+          </div>
+          <div class="meta"><h2 class="b-title"></h2><p class="b-artist"></p></div>
+          <div class="eq" aria-hidden="true"></div>
+          <div class="seekrow"><span class="b-cur">0:00</span><input type="range" class="b-seek" min="0" max="1000" value="0"><span class="b-dur">0:00</span></div>
+          <div class="ctrls">
+            <button class="icon" data-act="shuffle" data-ico="shuffle"></button>
+            <button class="icon" data-act="prev" data-ico="prev"></button>
+            <button class="icon play b-play" data-act="toggle" data-ico="play"></button>
+            <button class="icon" data-act="next" data-ico="next"></button>
+            <button class="icon" data-act="repeat" data-ico="repeat"></button>
+          </div>
+          <div class="volrow"><span class="ico" data-ico="vol"></span><input type="range" class="b-vol" min="0" max="100" value="100"></div>
+        </div>
+
+        <!-- Skin tocadiscos: solo el aparato, todos los controles dentro -->
+        <div class="skin skin-turntable">
+          <div class="deckwrap">
+            <div class="deck">
+              <div class="plinth"></div>
+              <div class="platter">
+                <div class="vinyl"><div class="label"><img class="b-cover" alt=""></div></div>
+                <div class="strobe"></div>
+              </div>
+              <div class="arm"><div class="pivot"></div><div class="rod"></div><div class="head"></div></div>
+              <div class="tt-side">
+                <span class="led"></span>
+                <div class="rpm"><button data-rpm="33">33</button><button data-rpm="45">45</button></div>
+                <div class="pitchbox">
+                  <input type="range" class="pitch" min="-8" max="8" step="0.5" value="0" aria-label="Pitch">
+                  <span class="pitch-val">0.0%</span>
+                </div>
+              </div>
+              <div class="tt-bar">
+                <div class="plate">
+                  <div class="pt"><b class="b-title"></b><span class="b-artist"></span></div>
+                  <span class="plate-time"><span class="b-cur">0:00</span> / <span class="b-dur">0:00</span></span>
+                </div>
+                <input type="range" class="b-seek" min="0" max="1000" value="0" aria-label="Seek">
+                <div class="tt-row">
+                  <div class="tt-btns">
+                    <button class="tb sm" data-act="shuffle" data-ico="shuffle" aria-label="Shuffle"></button>
+                    <button class="tb" data-act="prev" data-ico="prev" aria-label="Previous"></button>
+                    <button class="tb play b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+                    <button class="tb" data-act="next" data-ico="next" aria-label="Next"></button>
+                    <button class="tb sm" data-act="repeat" data-ico="repeat" aria-label="Repeat"></button>
+                  </div>
+                  <div class="tt-vol"><span data-ico="vol"></span><input type="range" class="b-vol" min="0" max="100" value="100" aria-label="Volume"></div>
+                </div>
+              </div>
+              <div class="stk-layer" data-stk="turntable"></div>
+              <div class="lid"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin MP3: solo el aparato -->
+        <div class="skin skin-mp3">
+          <div class="mp3wrap">
+            <div class="mp3">
+              <div class="lcd">
+                <div class="lcd-top"><span class="b-state"></span><span><span class="b-cur">0:00</span> / <span class="b-dur">0:00</span></span></div>
+                <div class="lcd-main">
+                  <div class="lcd-art-img"><img class="b-cover" alt=""></div>
+                  <div class="lcd-info">
+                    <div class="marquee"><span class="b-title"></span></div>
+                    <div class="lcd-art b-artist"></div>
+                    <div class="lcd-eq" aria-hidden="true"></div>
+                  </div>
+                </div>
+                <div class="lcdbar"><i class="b-bar"></i></div>
+                <input type="range" class="b-seek lcdseek" min="0" max="1000" value="0" aria-label="Seek">
+              </div>
+              <div class="mp3-mode">
+                <button class="icon" data-act="shuffle" data-ico="shuffle" aria-label="Shuffle"></button>
+                <button class="icon" data-act="repeat" data-ico="repeat" aria-label="Repeat"></button>
+              </div>
+              <div class="wheel">
+                <button class="wb top" data-act="volup" aria-label="Volume up">+</button>
+                <button class="wb left" data-act="prev" data-ico="prev" aria-label="Previous"></button>
+                <button class="wb right" data-act="next" data-ico="next" aria-label="Next"></button>
+                <button class="wb bottom" data-act="voldown" aria-label="Volume down">−</button>
+                <button class="wb center b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+              </div>
+              <div class="stk-layer" data-stk="mp3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin Display: texto sobre un PNG (hora y día, o la canción) -->
+        <div class="skin skin-display">
+          <div class="dsp">
+            <div class="dsp-art"><img class="dsp-img b-cover" alt=""><img class="dsp-png" alt=""></div>
+            <div class="dsp-shade"></div>
+            <div class="dsp-col">
+              <i class="dsp-line top"></i>
+              <div class="dsp-mid">
+                <div class="dsp-eyebrow"></div>
+                <div class="dsp-big"></div>
+                <div class="dsp-s1"></div>
+                <div class="dsp-s2"></div>
+                <div class="dsp-song"></div>
+              </div>
+              <i class="dsp-line bot"><b></b></i>
+            </div>
+            <div class="dsp-ctl">
+              <button data-act="prev" data-ico="prev" aria-label="Previous"></button>
+              <button class="b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+              <button data-act="next" data-ico="next" aria-label="Next"></button>
+            </div>
+            <div class="stk-layer" data-stk="display"></div>
+          </div>
+        </div>
+      </div>
+
+      
+<!-- PANEL DECORAR -->
+      <div id="decor" class="card decor" hidden>
+        <div class="setrow"><h3 data-i18n="decorT"></h3><button class="btn pri" id="decor-done" data-i18n="done"></button></div>
+
+        <div class="dsec dgrp" data-for="modern">
+          <label data-i18n="shape"></label>
+          <div class="chips" data-set="look.modern.shape">
+            <button data-v="square" data-i18n="sh1"></button>
+            <button data-v="round" data-i18n="sh2"></button>
+            <button data-v="circle" data-i18n="sh3"></button>
+          </div>
+          <label class="check"><input type="checkbox" data-bind="look.modern.aura"><span data-i18n="aura"></span></label>
+        </div>
+
+        <div class="dsec dgrp" data-for="turntable">
+          <label data-i18n="wood"></label>
+          <div class="chips" data-set="look.turntable.wood">
+            <button data-v="walnut" data-i18n="w1"></button>
+            <button data-v="black" data-i18n="w2"></button>
+            <button data-v="white" data-i18n="w3"></button>
+            <button data-v="custom" data-i18n="color"></button>
+          </div>
+          <input type="color" data-bind="look.turntable.woodColor">
+          <label data-i18n="vinyl"></label>
+          <div class="chips" data-set="look.turntable.vinyl">
+            <button data-v="black" data-i18n="v1"></button>
+            <button data-v="red" data-i18n="v2"></button>
+            <button data-v="blue" data-i18n="v3"></button>
+            <button data-v="clear" data-i18n="v4"></button>
+            <button data-v="splatter" data-i18n="v5"></button>
+          </div>
+          <label data-i18n="rpm"></label>
+          <div class="chips" data-set="look.turntable.rpm">
+            <button data-v="33">33</button>
+            <button data-v="45">45</button>
+          </div>
+          <label class="check"><input type="checkbox" data-bind="look.turntable.lid"><span data-i18n="lid"></span></label>
+          <label class="check"><input type="checkbox" data-bind="look.turntable.strobe"><span data-i18n="strobe"></span></label>
+          <label class="check"><input type="checkbox" data-bind="look.turntable.led"><span data-i18n="led"></span></label>
+        </div>
+
+        <div class="dsec dgrp" data-for="mp3">
+          <label data-i18n="bodyc"></label>
+          <label class="check"><input type="checkbox" data-bind="look.mp3.auto"><span data-i18n="auto"></span></label>
+          <input type="color" data-bind="look.mp3.body">
+          <label data-i18n="lcd"></label>
+          <div class="chips" data-set="look.mp3.lcd">
+            <button data-v="green" data-i18n="l1"></button>
+            <button data-v="amber" data-i18n="l2"></button>
+            <button data-v="blue" data-i18n="l3"></button>
+            <button data-v="dark" data-i18n="l4"></button>
+          </div>
+          <label class="check"><input type="checkbox" data-bind="look.mp3.cover"><span data-i18n="lcdCover"></span></label>
+          <label data-i18n="finish"></label>
+          <div class="chips" data-set="look.mp3.finish">
+            <button data-v="gloss" data-i18n="f1"></button>
+            <button data-v="matte" data-i18n="f2"></button>
+            <button data-v="metal" data-i18n="f3"></button>
+          </div>
+        </div>
+
+        <div class="dsec dgrp" data-for="display">
+          <label data-i18n="dLayout"></label>
+          <div class="chips" data-set="look.display.layout">
+            <button data-v="clock" data-i18n="dl1"></button>
+            <button data-v="poster" data-i18n="dl2"></button>
+          </div>
+          <label data-i18n="dArt"></label>
+          <div class="chips" data-set="look.display.art">
+            <button data-v="png" data-i18n="da1"></button>
+            <button data-v="cover" data-i18n="da2"></button>
+            <button data-v="none" data-i18n="da3"></button>
+          </div>
+          <div class="row wrap">
+            <button class="btn" id="dsp-pick"><span data-ico="plus"></span><span data-i18n="dPick"></span></button>
+            <button class="btn danger" id="dsp-clear" data-i18n="dClear"></button>
+          </div>
+          <small class="tip" data-i18n="dTip"></small>
+          <label class="check"><input type="checkbox" data-bind="look.display.autoN"><span data-i18n="dAutoN"></span></label>
+          <div class="row wrap">
+            <button class="btn" id="dsp-night"><span data-ico="plus"></span><span data-i18n="dNight"></span></button>
+            <button class="btn danger" id="dsp-night-clear" data-i18n="dClear"></button>
+          </div>
+          <label data-i18n="dKey"></label>
+          <div class="chips" data-set="look.display.key">
+            <button data-v="off" data-i18n="dk0"></button>
+            <button data-v="black" data-i18n="dk1"></button>
+            <button data-v="white" data-i18n="dk2"></button>
+          </div>
+          <div class="setrow"><label data-i18n="dKeyT"></label><output data-o="look.display.keyT" data-u=""></output></div>
+          <input type="range" data-bind="look.display.keyT" min="0" max="120">
+          <label data-i18n="dFit"></label>
+          <div class="chips" data-set="look.display.fit">
+            <button data-v="contain" data-i18n="df1"></button>
+            <button data-v="cover" data-i18n="df2"></button>
+          </div>
+          <label data-i18n="dFont"></label>
+          <div class="chips" data-set="look.display.font">
+            <button data-v="Syncopate">Syncopate</button>
+            <button data-v="Orbitron">Orbitron</button>
+            <button data-v="Bebas Neue">Bebas</button>
+            <button data-v="Montserrat">Montserrat</button>
+            <button data-v="Playfair Display">Playfair</button>
+            <button data-v="Space Mono">Mono</button>
+          </div>
+          <div class="setrow"><label data-i18n="dColor"></label><input type="color" data-bind="look.display.color"></div>
+          <div class="setrow"><label data-i18n="dDim"></label><output data-o="look.display.dim" data-u="%"></output></div>
+          <input type="range" data-bind="look.display.dim" min="0" max="80">
+          <div class="setrow"><label data-i18n="dRound"></label><output data-o="look.display.round" data-u="px"></output></div>
+          <input type="range" data-bind="look.display.round" min="0" max="48">
+          <label class="check"><input type="checkbox" data-bind="look.display.lines"><span data-i18n="dLines"></span></label>
+          <label class="check"><input type="checkbox" data-bind="look.display.h24"><span data-i18n="dH24"></span></label>
+        </div>
+
+        <div class="dsec">
+          <label data-i18n="stk"></label>
+          <div class="row wrap">
+            <button class="btn" data-stk="img"><span data-ico="plus"></span><span data-i18n="stkPng"></span></button>
+            <button class="btn" data-stk="emoji"><span data-ico="plus"></span><span data-i18n="stkEmo"></span></button>
+            <button class="btn" data-stk="text"><span data-ico="plus"></span><span data-i18n="stkTxt"></span></button>
+          </div>
+          <div id="stk-libbox" hidden>
+            <label data-i18n="stkLib"></label>
+            <div class="stklib" id="stk-lib"></div>
+          </div>
+          <div class="dropzone" data-i18n="stkDrop"></div>
+          <div class="dsec off" id="stk-tools" style="padding:0;border:0">
+            <div class="row wrap">
+              <button class="icon" data-stk="small" aria-label="-">−</button>
+              <button class="icon" data-stk="big" aria-label="+">+</button>
+              <button class="icon" data-stk="rotl" aria-label="Rotate left">⟲</button>
+              <button class="icon" data-stk="rotr" aria-label="Rotate right">⟳</button>
+              <button class="btn" data-stk="front" data-i18n="front"></button>
+              <input type="color" id="stk-color" value="#ffffff" aria-label="Color">
+              <button class="btn danger" data-stk="del" data-i18n="del"></button>
+            </div>
+            <div class="setrow"><label data-i18n="stkOp"></label><input type="range" id="stk-op" min="10" max="100" value="100" style="max-width:55%"></div>
+          </div>
+          <small class="tip" data-i18n="stkTip"></small>
+        </div>
+      </div>
+    </section>
+
+    
+<!-- PERSONALIZAR -->
+    <section id="v-set" class="view" hidden>
+      <header class="vh"><h1 data-i18n="set"></h1></header>
+      <div class="tabs" id="tabs">
+        <button data-tab="look" class="on" data-i18n="tabLook"></button>
+        <button data-tab="bg" data-i18n="tabBg"></button>
+        <button data-tab="player" data-i18n="tabPlayer"></button>
+        <button data-tab="motion" data-i18n="tabMotion"></button>
+        <button data-tab="data" data-i18n="tabData"></button>
+      </div>
+
+      <!-- APARIENCIA -->
+      <div class="tabpanel on" data-tab="look">
+        <div class="card">
+          <label data-i18n="preset"></label>
+          <div class="presets" id="presets"></div>
+        </div>
+        <div class="card">
+          <label data-i18n="lang"></label>
+          <select id="s-lang"></select>
+        </div>
+        <div class="card">
+          <label data-i18n="theme"></label>
+          <div class="chips" data-set="theme">
+            <button data-v="dark" data-i18n="dark"></button>
+            <button data-v="light" data-i18n="light"></button>
+          </div>
+          <label data-i18n="accent"></label>
+          <div class="swatches" id="swatches"></div>
+          <input type="color" id="s-accent">
+        </div>
+        <div class="card">
+          <label data-i18n="font"></label>
+          <select id="s-font"></select>
+          <button class="btn" id="s-fontup" data-i18n="fontup"></button>
+          <div class="setrow"><label data-i18n="uiscale"></label><output data-o="ui" data-u="%"></output></div>
+          <input type="range" data-bind="ui" min="85" max="135">
+        </div>
+        <div class="card">
+          <div class="setrow"><label data-i18n="radius"></label><output data-o="radius" data-u="px"></output></div>
+          <input type="range" data-bind="radius" min="0" max="32">
+          <div class="setrow"><label data-i18n="panelA"></label><output data-o="panelA" data-u="%"></output></div>
+          <input type="range" data-bind="panelA" min="15" max="95">
+          <div class="setrow"><label data-i18n="panelB"></label><output data-o="panelB" data-u="px"></output></div>
+          <input type="range" data-bind="panelB" min="0" max="40">
+          <label data-i18n="density"></label>
+          <div class="chips" data-set="density">
+            <button data-v="compact" data-i18n="d1"></button>
+            <button data-v="normal" data-i18n="d2"></button>
+            <button data-v="roomy" data-i18n="d3"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FONDO -->
+      <div class="tabpanel" data-tab="bg">
+        <div class="card">
+          <label data-i18n="bg"></label>
+          <div class="chips" data-set="bgtype">
+            <button data-v="none" data-i18n="bgAur"></button>
+            <button data-v="color" data-i18n="bg1"></button>
+            <button data-v="image" data-i18n="bg2"></button>
+            <button data-v="video" data-i18n="bg3"></button>
+            <button data-v="link" data-i18n="bg4"></button>
+          </div>
+          <div id="bg-color" class="bgopt"><input type="color" id="s-bgcolor"></div>
+          <div id="bg-file" class="bgopt"><button class="btn" id="s-bgfile" data-i18n="choose"></button></div>
+          <div id="bg-link" class="bgopt"><input type="url" id="s-bgurl" placeholder="https://…/fondo.gif | .mp4 | .webm"></div>
+        </div>
+        <div class="card">
+          <div class="setrow"><label data-i18n="dim"></label><output data-o="dim" data-u="%"></output></div>
+          <input type="range" id="s-dim" min="0" max="90">
+          <div class="setrow"><label data-i18n="blur"></label><output data-o="blur" data-u="px"></output></div>
+          <input type="range" id="s-blur" min="0" max="30">
+        </div>
+        <div class="card">
+          <label data-i18n="bgfx"></label>
+          <label class="check"><input type="checkbox" data-bind="fxVig"><span data-i18n="fxVig"></span></label>
+          <label class="check"><input type="checkbox" data-bind="fxGrain"><span data-i18n="fxGrain"></span></label>
+        </div>
+      </div>
+
+      <!-- REPRODUCTOR -->
+      <div class="tabpanel" data-tab="player">
+        <div class="card">
+          <label data-i18n="skin"></label>
+          <div class="skinpick chips" data-set="skin">
+            <button data-v="modern"><span data-ico="disc"></span><span data-i18n="s1"></span></button>
+            <button data-v="turntable"><span data-ico="vinyl"></span><span data-i18n="s2"></span></button>
+            <button data-v="mp3"><span data-ico="mp3"></span><span data-i18n="s3"></span></button>
+            <button data-v="display"><span data-ico="clock"></span><span data-i18n="s4"></span></button>
+          </div>
+          <button class="btn pri" id="btn-open-decor"><span data-ico="brush"></span><span data-i18n="decorOpen"></span></button>
+        </div>
+        <div class="card desk-only">
+          <label data-i18n="wTitle"></label>
+          <label class="check"><input type="checkbox" data-bind="wfade"><span data-i18n="wFade"></span></label>
+          <div class="setrow"><label data-i18n="wIdle"></label><output data-o="widle" data-u="%"></output></div>
+          <input type="range" data-bind="widle" min="15" max="90">
+          <label class="check"><input type="checkbox" data-bind="wsnap"><span data-i18n="wSnap"></span></label>
+          <small class="tip" data-i18n="wKeys"></small>
+        </div>
+        <div class="card">
+          <label class="check"><input type="checkbox" data-bind="immersive"><span data-i18n="clean"></span></label>
+          <small class="tip" data-i18n="cleanTip"></small>
+          <label class="check"><input type="checkbox" id="s-react"><span data-i18n="react"></span></label>
+          <label class="check"><input type="checkbox" id="s-vis"><span data-i18n="vis"></span></label>
+        </div>
+      </div>
+
+      <!-- ANIMACIONES -->
+      <div class="tabpanel" data-tab="motion">
+        <div class="card">
+          <label class="check"><input type="checkbox" id="s-anim"><span data-i18n="anim"></span></label>
+          <div class="setrow"><label data-i18n="speed"></label><output data-o="speed" data-u="%"></output></div>
+          <input type="range" data-bind="speed" min="40" max="220">
+          <label data-i18n="trans"></label>
+          <select id="s-trans">
+            <option value="fade" data-i18n="t1"></option>
+            <option value="slide" data-i18n="t2"></option>
+            <option value="zoom" data-i18n="t3"></option>
+            <option value="none" data-i18n="t4"></option>
+          </select>
+        </div>
+      </div>
+
+      <!-- DATOS -->
+      <div class="tabpanel" data-tab="data">
+        <div class="card">
+          <label data-i18n="storeT"></label>
+          <small class="tip" id="store-status"></small>
+        </div>
+        <div class="card">
+          <label data-i18n="backup"></label>
+          <div class="row wrap">
+            <button class="btn" id="s-export" data-i18n="exportS"></button>
+            <button class="btn" id="s-import" data-i18n="importS"></button>
+          </div>
+          <button class="btn danger" id="s-reset" data-i18n="resetA"></button>
+        </div>
+        <div class="card">
+          <button class="btn pri" id="btn-install" hidden data-i18n="install"></button>
+          <small class="tip"><span data-i18n="ver"></span> <span id="app-ver"></span></small>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="mini" hidden>
+    <img class="b-cover" alt="">
+    <div class="ti"><b class="b-title"></b><small class="b-artist"></small></div>
+    <button class="icon b-play" data-act="toggle" data-ico="play"></button>
+    <button class="icon" data-act="next" data-ico="next"></button>
+  </div>
+
+  <nav>
+    <button data-go="lib"><span data-ico="lib"></span><small data-i18n="lib"></small></button>
+    <button data-go="pls"><span data-ico="list"></span><small data-i18n="pls"></small></button>
+    <button data-go="player"><span data-ico="disc"></span><small data-i18n="now"></small></button>
+    <button data-go="set"><span data-ico="gear"></span><small data-i18n="set"></small></button>
+  </nav>
+</div>
+
+<audio id="audio" playsinline preload="auto"></audio>
+<input type="file" id="picker" hidden>
+<dialog id="dlg"><form method="dialog"></form></dialog>
+<dialog id="disc">
+  <div class="disc">
+    <div class="setrow"><h3 data-i18n="discTitle"></h3><button class="btn" id="disc-x" data-i18n="done"></button></div>
+    <div class="chips" id="disc-src"><button data-v="ov" class="on">Openverse</button><button data-v="ia">Internet Archive</button><button data-v="jam">Jamendo</button></div>
+    <div id="disc-key" hidden><input id="disc-keyin" type="text" data-i18n-ph="discKey" autocomplete="off"><small class="tip" data-i18n="discKeyHint"></small></div>
+    <div class="disc-bar"><input id="disc-q" type="search" data-i18n-ph="discPh" autocomplete="off"><button class="btn pri" id="disc-go" data-i18n="discGo"></button></div>
+    <div id="disc-res"></div>
+    <small class="tip" data-i18n="discLic"></small>
+  </div>
+</dialog>
+<!-- Reproductor oficial de YouTube (visible mientras suena un enlace de YouTube; es lo que exigen sus condiciones) -->
+<div id="ytdock" hidden><div id="ytplayer"></div></div>
+<div id="toast" role="status"></div>
+<script src="lang.js"></script>
+<script src="lang2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
