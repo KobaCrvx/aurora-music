@@ -162,7 +162,7 @@ public class MainActivity extends Activity {
     static void command(final String c) {
         final MainActivity a = inst;
         if (a == null || a.web == null) return;
-        if (!("toggle".equals(c) || "next".equals(c) || "prev".equals(c))) return;
+        if (!c.matches("toggle|play|pause|next|prev|seek:[0-9.]+")) return;
         a.web.post(new Runnable() {
             @Override
             public void run() {
@@ -179,7 +179,8 @@ public class MainActivity extends Activity {
         public void setState(String json) {
             try {
                 JSONObject o = new JSONObject(json);
-                PlaybackService.push(MainActivity.this, o.optBoolean("playing"), o.optString("title"), o.optString("artist"));
+                PlaybackService.push(MainActivity.this, o.optBoolean("playing"), o.optString("title"), o.optString("artist"),
+                        o.optLong("dur"), o.optLong("pos"), o.optString("art"));
             } catch (Exception ignored) {
             }
         }

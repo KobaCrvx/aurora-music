@@ -8,14 +8,21 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
+import android.media.MediaMetadata;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
+import android.util.Base64;
 
 /**
- * Servicio en primer plano: mantiene viva la app con la pantalla apagada o en segundo plano
- * y muestra la notificacion con anterior / pausa / siguiente.
+ * Servicio en primer plano: mantiene viva la app con la pantalla apagada y publica la tarjeta de musica
+ * (portada segun el reproductor elegido, barra de progreso y botones) mediante una MediaSession.
  */
 public class PlaybackService extends Service {
     static final String CH = "aurora_playback";
@@ -25,28 +32,46 @@ public class PlaybackService extends Service {
 
     NotificationManager nm;
     PowerManager.WakeLock wl;
+    MediaSession session;
     boolean foreground = false;
     boolean playing = false;
     String title = "";
     String artist = "";
+    long dur = 0, pos = 0;
+    Bitmap art;
 
-    static void push(Context c, boolean playing, String title, String artist) {
+    static void push(Context c, boolean playing, String title, String artist, long dur, long pos, String artB64) {
         if (title == null || title.length() == 0) {
             stopNow(c);
             return;
         }
+        Bitmap bmp = decode(artB64);
         if (inst != null) {
-            inst.update(playing, title, artist);
+            inst.update(playing, title, artist, dur, pos, bmp);
             return;
         }
         Intent i = new Intent(c, PlaybackService.class);
         i.putExtra("playing", playing);
         i.putExtra("title", title);
         i.putExtra("artist", artist);
+        i.putExtra("dur", dur);
+        i.putExtra("pos", pos);
+        if (artB64 != null && artB64.length() > 0 && artB64.length() < 400000) i.putExtra("art", artB64);
         try {
             if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i);
             else c.startService(i);
         } catch (Exception ignored) {
+        }
+    }
+
+    static Bitmap decode(String dataUrl) {
+        if (dataUrl == null || dataUrl.length() == 0) return null;
+        try {
+            int k = dataUrl.indexOf(',');
+            byte[] b = Base64.decode(k >= 0 ? dataUrl.substring(k + 1) : dataUrl, Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(b, 0, b.length);
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -70,6 +95,16 @@ public class PlaybackService extends Service {
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "aurora:playback");
         wl.setReferenceCounted(false);
+
+        session = new MediaSession(this, "AuroraMusic");
+        session.setCallback(new MediaSession.Callback() {
+            @Override public void onPlay() { MainActivity.command("play"); }
+            @Override public void onPause() { MainActivity.command("pause"); }
+            @Override public void onSkipToNext() { MainActivity.command("next"); }
+            @Override public void onSkipToPrevious() { MainActivity.command("prev"); }
+            @Override public void onSeekTo(long p) { MainActivity.command("seek:" + (p / 1000.0)); }
+        });
+        session.setActive(true);
     }
 
     @Override
@@ -83,14 +118,33 @@ public class PlaybackService extends Service {
             MainActivity.command(c);
             return START_NOT_STICKY;
         }
-        update(intent.getBooleanExtra("playing", false), intent.getStringExtra("title"), intent.getStringExtra("artist"));
+        update(intent.getBooleanExtra("playing", false), intent.getStringExtra("title"), intent.getStringExtra("artist"),
+                intent.getLongExtra("dur", 0), intent.getLongExtra("pos", 0), decode(intent.getStringExtra("art")));
         return START_NOT_STICKY;
     }
 
-    void update(boolean playing, String title, String artist) {
+    void update(boolean playing, String title, String artist, long dur, long pos, Bitmap bmp) {
         this.playing = playing;
         this.title = title == null ? "" : title;
         this.artist = artist == null ? "" : artist;
+        this.dur = dur;
+        this.pos = pos;
+        if (bmp != null) this.art = bmp;
+
+        MediaMetadata.Builder md = new MediaMetadata.Builder()
+                .putString(MediaMetadata.METADATA_KEY_TITLE, this.title)
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, this.artist)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, dur > 0 ? dur : -1);
+        if (this.art != null) md.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, this.art);
+        session.setMetadata(md.build());
+
+        long acts = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE
+                | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO;
+        session.setPlaybackState(new PlaybackState.Builder()
+                .setActions(acts)
+                .setState(playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, pos, playing ? 1f : 0f, SystemClock.elapsedRealtime())
+                .build());
+
         Notification n = build();
         if (!foreground) {
             if (Build.VERSION.SDK_INT >= 29) {
@@ -136,13 +190,20 @@ public class PlaybackService extends Service {
                 .addAction(action(playing ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
                         playing ? "Pausa" : "Reproducir", "toggle", 2))
                 .addAction(action(android.R.drawable.ic_media_next, "Siguiente", "next", 3))
-                .setStyle(new Notification.MediaStyle().setShowActionsInCompactView(0, 1, 2));
+                .setStyle(new Notification.MediaStyle()
+                        .setMediaSession(session.getSessionToken())
+                        .setShowActionsInCompactView(0, 1, 2));
+        if (art != null) b.setLargeIcon(art);
         return b.build();
     }
 
     @Override
     public void onDestroy() {
         if (wl != null && wl.isHeld()) wl.release();
+        if (session != null) {
+            session.setActive(false);
+            session.release();
+        }
         if (inst == this) inst = null;
         foreground = false;
         super.onDestroy();

@@ -516,12 +516,78 @@ function renderPlayerUI() {
   document.title = tr ? tr.title + (tr.artist ? ' · ' + tr.artist : '') + ' — Aurora Music' : 'Aurora Music';
   // Botones de la miniatura de la barra de tareas (solo app de escritorio)
   if (DESK) { const k = playing + '|' + S.lang; if (renderPlayerUI.k !== k) { renderPlayerUI.k = k; try { DESK.setState({ playing, lang: S.lang }); } catch { } } }
-  if (AND) {
-    const k = playing + '|' + (tr ? tr.id : '');
-    if (renderPlayerUI.ak !== k) { renderPlayerUI.ak = k; try { AND.setState(JSON.stringify({ playing, title: tr ? tr.title : '', artist: tr ? (tr.artist || '') : '' })); } catch { } }
-  }
+  if (AND) pushAndroid(false);
   syncFake(); renderDisplay(); kick();
 }
+/* ============ Android: tarjeta de la notificación según el reproductor en uso ============ */
+async function skinArt(tr) {
+  const N = 480, acc = S.accent || '#1ed760';
+  let img = null; const src = tr ? covers.get('t' + tr.id) : '';
+  if (src) img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; setTimeout(() => r(null), 2500); });
+  const draw = im => {
+    const c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+    const rr = (x, y, w, h, r) => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
+    const art = (x, y, w, h, r, circle) => {
+      g.save(); if (circle) { g.beginPath(); g.arc(x + w / 2, y + h / 2, w / 2, 0, 7); } else rr(x, y, w, h, r); g.clip();
+      if (im) { const s = Math.max(w / im.width, h / im.height); g.drawImage(im, x + (w - im.width * s) / 2, y + (h - im.height * s) / 2, im.width * s, im.height * s); }
+      else { const gr = g.createLinearGradient(x, y, x + w, y + h); gr.addColorStop(0, acc); gr.addColorStop(1, '#101014'); g.fillStyle = gr; g.fillRect(x, y, w, h); g.fillStyle = 'rgba(255,255,255,.85)'; g.font = 'bold ' + Math.round(h * .5) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((Array.from(((tr && tr.title) || '♪').trim())[0] || '♪').toUpperCase(), x + w / 2, y + h / 2 + h * .04); }
+      g.restore();
+    };
+    const lin = (a, b, y0, y1) => { const q = g.createLinearGradient(0, y0, 0, y1); q.addColorStop(0, a); q.addColorStop(1, b); return q; };
+    const sk = S.skin;
+    if (sk === 'turntable') {
+      g.fillStyle = lin('#e4e6e9', '#a9adb3', 0, N); g.fillRect(0, 0, N, N);
+      g.fillStyle = '#17171a'; g.beginPath(); g.arc(236, 250, 205, 0, 7); g.fill();
+      g.strokeStyle = '#c9ccd1'; g.lineWidth = 9; g.beginPath(); g.arc(236, 250, 210, 0, 7); g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,.06)'; g.lineWidth = 1.5; for (let r = 100; r < 200; r += 9) { g.beginPath(); g.arc(236, 250, r, 0, 7); g.stroke(); }
+      art(236 - 78, 250 - 78, 156, 156, 0, true); g.fillStyle = '#e8e8e8'; g.beginPath(); g.arc(236, 250, 7, 0, 7); g.fill();
+      g.fillStyle = '#2a2a2e'; g.beginPath(); g.arc(430, 70, 38, 0, 7); g.fill(); g.fillStyle = '#9a9da3'; g.beginPath(); g.arc(430, 70, 22, 0, 7); g.fill();
+      g.strokeStyle = '#8b8e94'; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(430, 70); g.lineTo(446, 330); g.lineTo(398, 392); g.stroke();
+      g.fillStyle = '#222'; g.save(); g.translate(398, 392); g.rotate(.6); g.fillRect(-12, -6, 28, 34); g.restore();
+    } else if (sk === 'mp3') {
+      g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
+      g.fillStyle = lin('#4a4a4e', '#222225', 70, 410); rr(14, 90, 452, 300, 34); g.fill();
+      g.fillStyle = '#0a0a0c'; rr(34, 112, 200, 200, 8); g.fill(); art(40, 118, 188, 188, 6);
+      g.fillStyle = '#9a9aa0'; g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.fillText('MUSIC', 356, 150);
+      g.fillStyle = '#1a1a1d'; g.beginPath(); g.arc(356, 270, 96, 0, 7); g.fill(); g.fillStyle = '#4b4b50'; g.beginPath(); g.arc(356, 270, 36, 0, 7); g.fill();
+      g.fillStyle = '#e6e6e6'; const tri = (x, y, d) => { g.beginPath(); g.moveTo(x, y - 9); g.lineTo(x + 14 * d, y); g.lineTo(x, y + 9); g.fill(); };
+      tri(298, 270, -1); tri(414, 270, 1); tri(344, 346, 1); g.fillRect(364, 337, 4, 18);
+      g.fillStyle = '#c8c8cc'; g.fillRect(40, 340, 188, 3); g.fillStyle = acc; g.fillRect(40, 340, 90, 3);
+    } else if (sk === 'display') {
+      g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
+      if (im) { g.globalAlpha = .45; const s = Math.max(N / im.width, N / im.height); g.drawImage(im, (N - im.width * s) / 2, (N - im.height * s) / 2, im.width * s, im.height * s); g.globalAlpha = 1; }
+      g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, N, N);
+      g.fillStyle = S.look && S.look.display && S.look.display.color || '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      const t = (tr && tr.title) || 'Aurora Music'; let fs = 58; g.font = '700 ' + fs + 'px sans-serif'; while (g.measureText(t).width > N - 60 && fs > 24) { fs -= 4; g.font = '700 ' + fs + 'px sans-serif'; }
+      g.fillText(t, N / 2, N / 2 - 14); g.globalAlpha = .7; g.font = '300 30px sans-serif'; g.fillText((tr && tr.artist) || '', N / 2, N / 2 + 36); g.globalAlpha = 1;
+      g.fillStyle = acc; g.fillRect(N / 2 - 40, N / 2 + 70, 80, 4);
+    } else { // moderno
+      g.fillStyle = lin(acc, '#0b0b0f', 0, N); g.fillRect(0, 0, N, N); g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 0, N, N);
+      g.save(); g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 30; g.shadowOffsetY = 12; g.fillStyle = '#000'; rr(60, 50, 360, 360, 36); g.fill(); g.restore();
+      art(60, 50, 360, 360, 36);
+      g.fillStyle = acc; rr(60, 432, 360, 8, 4); g.fill();
+    }
+    return c.toDataURL('image/jpeg', .86);
+  };
+  try { return draw(img); } catch { try { return draw(null); } catch { return ''; } }
+}
+let andBusy = false, andLast = '';
+async function pushAndroid(force) {
+  if (!AND || andBusy) return;
+  const tr = cur(), playing = !audio.paused && !audio.ended;
+  const d = audio.duration && isFinite(audio.duration) ? audio.duration : ((tr && tr.dur) || 0);
+  const key = [playing, tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || '', Math.round(d)].join('|');
+  const pos = Math.round(audio.currentTime * 1000);
+  if (!force && key === andLast) return;
+  andBusy = true;
+  try {
+    const artKey = [tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || ''].join('|');
+    if (pushAndroid.ak !== artKey) { pushAndroid.ak = artKey; pushAndroid.art = tr ? await skinArt(tr) : ''; }
+    andLast = key;
+    AND.setState(JSON.stringify({ playing, title: tr ? tr.title : '', artist: tr ? (tr.artist || '') : '', dur: Math.round(d * 1000), pos, art: pushAndroid.art || '' }));
+  } catch { } finally { andBusy = false; }
+}
+if (AND) { audio.addEventListener('seeked', () => pushAndroid(true)); setInterval(() => pushAndroid(false), 2000); }
 let lastPos = 0;
 function onTime() {
   const d = audio.duration || (cur() && cur().dur) || 0, c = audio.currentTime, p = d ? Math.min(1, c / d) : 0;
@@ -749,7 +815,7 @@ function bind() {
    - Stickers y personalización de cada reproductor
    - Animación reactiva al audio y giro del disco con inercia
    ============================================================ */
-const APP_VERSION = '3.1';
+const APP_VERSION = '3.2';
 const stageEl = $('#stage');
 let wireDoc = null, decorOn = false, selStk = null, customFontUrl = null, pipPoll = 0;
 let barsEq = [], barsLcd = [];
@@ -1263,7 +1329,7 @@ function initExtras() {
   go('lib');
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch { }
   // Órdenes de la miniatura de la barra de tareas de Windows (anterior / pausa / siguiente)
-  const runCmd = c => { if (c === 'toggle') toggle(); else if (c === 'next') next(false); else if (c === 'prev') prev(); };
+  const runCmd = c => { if (c === 'toggle') toggle(); else if (c === 'play') { if (audio.paused) toggle(); } else if (c === 'pause') { if (!audio.paused) toggle(); } else if (c === 'next') next(false); else if (c === 'prev') prev(); else if (/^seek:/.test(c)) { audio.currentTime = +c.slice(5) || 0; } };
   if (DESK) DESK.onCommand(runCmd);
   window.auroraCmd = runCmd; // la notificación de Android llama aquí
   if ('serviceWorker' in navigator && location.protocol !== 'file:' && !DESK && !AND) {
