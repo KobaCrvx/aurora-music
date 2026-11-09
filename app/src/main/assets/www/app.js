@@ -584,7 +584,8 @@ async function pushAndroid(force) {
     const artKey = [tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || ''].join('|');
     if (pushAndroid.ak !== artKey) { pushAndroid.ak = artKey; pushAndroid.art = tr ? await skinArt(tr) : ''; }
     andLast = key;
-    AND.setState(JSON.stringify({ playing, title: tr ? tr.title : '', artist: tr ? (tr.artist || '') : '', dur: Math.round(d * 1000), pos, art: pushAndroid.art || '' }));
+    const nice = x => String(x || '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
+    AND.setState(JSON.stringify({ playing, title: tr ? nice(tr.title) : '', artist: tr ? nice(tr.artist) : '', dur: Math.round(d * 1000), pos, art: pushAndroid.art || '' }));
   } catch { } finally { andBusy = false; }
 }
 if (AND) { audio.addEventListener('seeked', () => pushAndroid(true)); setInterval(() => pushAndroid(false), 2000); }
