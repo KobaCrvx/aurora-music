@@ -77,7 +77,7 @@ const DEF = { lang: (navigator.language || 'en').slice(0, 2), skin: 'modern', th
     mp3: { lcd: 'green', finish: 'gloss', auto: true, body: '#c85a5a', cover: true },
     display: { layout: 'clock', art: 'cover', png: null, pngN: null, autoN: true, key: 'off', keyT: 30, fit: 'contain', color: '#ffffff', font: 'Syncopate', lines: true, dim: 25, round: 0, h24: false }
   },
-  stickers: { modern: [], turntable: [], mp3: [], display: [] } };
+  stickers: { modern: [], turntable: [], mp3: [], display: [], retro: [] } };
 // Fusiona opciones nuevas con las guardadas por versiones anteriores
 const normalizeS = saved => {
   const o = { ...JSON.parse(JSON.stringify(DEF)), ...(saved || {}) };
@@ -85,7 +85,7 @@ const normalizeS = saved => {
   o.look = o.look || {};
   for (const k of Object.keys(DEF.look)) o.look[k] = { ...DEF.look[k], ...(o.look[k] || {}) };
   o.stickers = o.stickers || {};
-  for (const k of ['modern', 'turntable', 'mp3', 'display']) if (!Array.isArray(o.stickers[k])) o.stickers[k] = [];
+  for (const k of ['modern', 'turntable', 'mp3', 'display', 'retro']) if (!Array.isArray(o.stickers[k])) o.stickers[k] = [];
   return o;
 };
 let hadSaved = false;
@@ -231,6 +231,7 @@ const ICONS = {
   menu: `<path ${st} d="M4 7h16M4 12h16M4 17h16"/>`,
   expand: `<path ${st} d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>`,
   vinyl: `<circle cx="12" cy="12" r="9" ${st}/><circle cx="12" cy="12" r="3" ${st}/><path ${st} d="M12 3v2"/>`,
+  retro: `<rect x="3" y="5" width="18" height="14" rx="3" ${st}/><rect x="6" y="8" width="12" height="5" rx=".8" ${st}/><circle cx="9" cy="16" r=".6" ${st}/><circle cx="12" cy="16" r=".6" ${st}/><circle cx="15" cy="16" r=".6" ${st}/>`,
   mp3: `<rect x="6" y="2.5" width="12" height="19" rx="3" ${st}/><rect x="8.5" y="5" width="7" height="5" rx="1" ${st}/><circle cx="12" cy="15.5" r="3" ${st}/>`,
   pip: `<rect x="3" y="5" width="18" height="14" rx="2" ${st}/><rect x="12" y="11" width="7" height="6" rx="1"/>`
 };
@@ -855,15 +856,15 @@ function flashChange() {
 /* ---------- Barras del ecualizador ---------- */
 function buildBars() {
   const mk = (sel, n) => $$(sel).forEach(el => { el.innerHTML = Array.from({ length: n }, () => `<i style="animation-delay:-${Math.random().toFixed(2)}s"></i>`).join(''); });
-  mk('.eq', 28); mk('.lcd-eq', 14);
+  mk('.eq', 28); mk('.lcd-eq', 14); mk('.rt-eq', 8);
   barsEq = [...stageEl.querySelectorAll('.eq i')];
-  barsLcd = [...stageEl.querySelectorAll('.lcd-eq i')];
+  barsLcd = [...stageEl.querySelectorAll('.lcd-eq i, .rt-eq i')];
 }
 
 /* ---------- Análisis de audio (solo lectura: no toca la salida de sonido) ---------- */
 const AN = { ctx: null, an: null, src: null, data: null, ok: false, silent: false, zero: 0, forId: null };
 const reactive = () => !!(S.react && AN.ok && !AN.silent);
-function syncFake() { stageEl.querySelectorAll('.eq,.lcd-eq').forEach(e => e.classList.toggle('fake', !reactive())); }
+function syncFake() { stageEl.querySelectorAll('.eq,.lcd-eq,.rt-eq').forEach(e => e.classList.toggle('fake', !reactive())); }
 function setupAnalyser() {
   if (!S.react) return;
   try {
@@ -920,7 +921,7 @@ function tick(ts) {
         const n = bars.length;
         for (let i = 0; i < n; i++) { const idx = 1 + Math.floor(Math.pow(i / n, 1.5) * span); const v = Math.pow(d[idx] / 255, 1.35); bars[i].style.transform = 'scaleY(' + Math.max(0.08, v).toFixed(3) + ')'; }
       };
-      if (S.skin === 'modern' && S.vis) upd(barsEq, 52); else if (S.skin === 'mp3') upd(barsLcd, 40);
+      if (S.skin === 'modern' && S.vis) upd(barsEq, 52); else if (S.skin === 'mp3' || S.skin === 'retro') upd(barsLcd, 40);
       ANI.dirty = true;
     } catch { }
   }
@@ -969,10 +970,10 @@ function applyLook() {
 
 /* ---------- Ventana flotante (mini reproductor) ---------- */
 // En la app de escritorio el reproductor flotante es un "widget" sin marco: el tamaño sale del aparato elegido y de la escala del usuario
-const WIDGET_BASE = { modern: { w: 380, h: 640 }, turntable: { w: 470, h: 536 }, mp3: { w: 340, h: 512 }, display: { w: 380, h: 475 } };
+const WIDGET_BASE = { modern: { w: 380, h: 640 }, turntable: { w: 470, h: 536 }, mp3: { w: 340, h: 512 }, retro: { w: 460, h: 340 }, display: { w: 380, h: 475 } };
 const pipSize = () => {
   if (DESK) { const b = WIDGET_BASE[S.skin] || WIDGET_BASE.modern, k = clamp(S.wsize || 100, 60, 160) / 100; return { w: Math.round(b.w * k), h: Math.round(b.h * k) }; }
-  return S.skin === 'display' ? { w: 400, h: 500 } : S.skin === 'mp3' ? { w: 340, h: 600 } : S.skin === 'turntable' ? { w: 440, h: 620 } : { w: 420, h: 680 };
+  return S.skin === 'retro' ? { w: 480, h: 420 } : S.skin === 'display' ? { w: 400, h: 500 } : S.skin === 'mp3' ? { w: 340, h: 600 } : S.skin === 'turntable' ? { w: 440, h: 620 } : { w: 420, h: 680 };
 };
 function resizePip() {
   if (!pipWin) return;
@@ -1013,6 +1014,7 @@ async function openPip() {
         <button data-v="turntable" data-ico="vinyl" title="${esc(T('s2'))}" aria-label="${esc(T('s2'))}"></button>
         <button data-v="mp3" data-ico="mp3" title="${esc(T('s3'))}" aria-label="${esc(T('s3'))}"></button>
         <button data-v="display" data-ico="clock" title="${esc(T('s4'))}" aria-label="${esc(T('s4'))}"></button>
+        <button data-v="retro" data-ico="retro" title="${esc(T('s5'))}" aria-label="${esc(T('s5'))}"></button>
       </div>
       <button class="wbtn" data-w="smaller" data-ico="minus" title="${esc(T('wSmaller'))}" aria-label="${esc(T('wSmaller'))}"></button>
       <button class="wbtn" data-w="bigger" data-ico="plus" title="${esc(T('wBigger'))}" aria-label="${esc(T('wBigger'))}"></button>
@@ -1021,7 +1023,7 @@ async function openPip() {
     </div>`;
     hydrate(wrap);
   } else {
-    wrap.innerHTML = `<div class="chips pipchips" data-set="skin"><button data-v="modern" data-i18n="s1"></button><button data-v="turntable" data-i18n="s2"></button><button data-v="mp3" data-i18n="s3"></button><button data-v="display" data-i18n="s4"></button></div>`;
+    wrap.innerHTML = `<div class="chips pipchips" data-set="skin"><button data-v="modern" data-i18n="s1"></button><button data-v="turntable" data-i18n="s2"></button><button data-v="mp3" data-i18n="s3"></button><button data-v="display" data-i18n="s4"></button><button data-v="retro" data-i18n="s5"></button></div>`;
     $$('[data-i18n]', wrap).forEach(e => { e.textContent = T(e.dataset.i18n); });
   }
   d.body.appendChild(wrap); wrap.appendChild(stageEl);

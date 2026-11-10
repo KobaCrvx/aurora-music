@@ -74,6 +74,7 @@
           <button data-v="turntable" data-i18n="s2"></button>
           <button data-v="mp3" data-i18n="s3"></button>
           <button data-v="display" data-i18n="s4"></button>
+          <button data-v="retro" data-i18n="s5"></button>
         </div>
         <div class="row wrap">
           <button class="btn" id="btn-clean"><span data-ico="expand"></span><span data-i18n="clean"></span></button>
@@ -179,6 +180,37 @@
                 <button class="wb center b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
               </div>
               <div class="stk-layer" data-stk="mp3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin Retro: reproductor portátil con pantalla LCD azul -->
+        <div class="skin skin-retro">
+          <div class="retrowrap">
+            <div class="retro">
+              <div class="rt-screen">
+                <div class="rt-main">
+                  <div class="rt-art"><img class="b-cover" alt=""></div>
+                  <div class="rt-info">
+                    <div class="marquee rt-title"><span class="b-title"></span></div>
+                    <div class="rt-artist b-artist"></div>
+                    <div class="rt-eq" aria-hidden="true"></div>
+                  </div>
+                </div>
+                <div class="rt-bar"><i class="b-bar"></i><u></u></div>
+                <div class="rt-times"><span class="b-cur">0:00</span><span class="b-dur">0:00</span></div>
+                <input type="range" class="b-seek rt-seek" min="0" max="1000" value="0" aria-label="Seek">
+              </div>
+              <div class="rt-keys">
+                <span class="rt-grill"></span>
+                <button class="rk" data-act="repeat" data-ico="repeat" aria-label="Repeat"></button>
+                <button class="rk" data-act="shuffle" data-ico="shuffle" aria-label="Shuffle"></button>
+                <button class="rk" data-act="prev" data-ico="prev" aria-label="Previous"></button>
+                <button class="rk big b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+                <button class="rk" data-act="next" data-ico="next" aria-label="Next"></button>
+                <span class="rt-grill"></span>
+              </div>
+              <div class="stk-layer" data-stk="retro"></div>
             </div>
           </div>
         </div>
@@ -445,6 +477,7 @@
             <button data-v="turntable"><span data-ico="vinyl"></span><span data-i18n="s2"></span></button>
             <button data-v="mp3"><span data-ico="mp3"></span><span data-i18n="s3"></span></button>
             <button data-v="display"><span data-ico="clock"></span><span data-i18n="s4"></span></button>
+            <button data-v="retro"><span data-ico="retro"></span><span data-i18n="s5"></span></button>
           </div>
           <button class="btn pri" id="btn-open-decor"><span data-ico="brush"></span><span data-i18n="decorOpen"></span></button>
         </div>

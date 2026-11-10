@@ -305,6 +305,10 @@ public class PlaybackService extends Service {
             bg = 0xFF000000;
             big = new RemoteViews(getPackageName(), R.layout.n_mp3);
             cr = 0.04f; cdp = 46;
+        } else if ("retro".equals(skin)) {
+            bg = 0xFF000000; txt = 0xFF0D1C28; sub = 0xFF0D1C28; ico = 0xFF2A2A2E;
+            big = new RemoteViews(getPackageName(), R.layout.n_retro);
+            cr = 0.0f; cdp = 40;
         } else if ("display".equals(skin)) {
             bg = 0xFF000000; txt = dcol; ico = dcol;
             big = new RemoteViews(getPackageName(), R.layout.n_display);
