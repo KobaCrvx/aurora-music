@@ -509,6 +509,7 @@ body.widget[data-skin=display] .dsp{background:none!important}
 .pipwrap.widget.idle{opacity:var(--widle,.45)}
 body.noanim .pipwrap.widget{transition:none}
 body:not(.desk) .desk-only{display:none}
+body:not(.android) .and-only{display:none}
 
 /* ===== YouTube y música libre ===== */
 #ytdock{position:fixed;right:14px;bottom:84px;width:min(356px,92vw);height:200px;z-index:70;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 10px 30px rgba(0,0,0,.55);border:1px solid var(--line)}

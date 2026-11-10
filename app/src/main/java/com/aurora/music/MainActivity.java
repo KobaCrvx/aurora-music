@@ -15,8 +15,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import org.json.JSONObject;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -173,16 +171,11 @@ public class MainActivity extends Activity {
         });
     }
 
-    /** Puente que usa la pagina para avisar que suena (titulo, artista, play/pausa). */
+    /** Puente que usa la pagina para avisar que suena (titulo, artista, portada, estilo...). */
     class Bridge {
         @JavascriptInterface
         public void setState(String json) {
-            try {
-                JSONObject o = new JSONObject(json);
-                PlaybackService.push(MainActivity.this, o.optBoolean("playing"), o.optString("title"), o.optString("artist"),
-                        o.optLong("dur"), o.optLong("pos"), o.optString("art"));
-            } catch (Exception ignored) {
-            }
+            PlaybackService.push(MainActivity.this, json);
         }
     }
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="132dp" android:orientation="vertical" android:gravity="center_horizontal" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="10dp" android:paddingBottom="6dp">
+        <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+        <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:singleLine="true" android:ellipsize="end" android:fontFamily="sans-serif-light" android:textSize="22sp" android:textColor="#FFFFFFFF"/>
+        <TextView android:id="@+id/n_artist" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:singleLine="true" android:ellipsize="end" android:fontFamily="sans-serif-light" android:textSize="14sp" android:textColor="#B3FFFFFF"/>
+        <View android:id="@+id/n_line" android:layout_width="40dp" android:layout_height="3dp" android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
+        <FrameLayout android:layout_width="match_parent" android:layout_height="2dp">
+            <ImageView android:layout_width="match_parent" android:layout_height="2dp" android:scaleType="fitXY" android:src="@drawable/n_bar_track"/>
+            <ImageView android:id="@+id/n_fill" android:layout_width="match_parent" android:layout_height="2dp" android:scaleType="fitXY" android:src="@drawable/n_bar_fill"/>
+        </FrameLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="0dp"><Chronometer android:id="@+id/n_cur" android:layout_width="0dp" android:layout_height="0dp"/><TextView android:id="@+id/n_dur" android:layout_width="0dp" android:layout_height="0dp"/><ImageView android:id="@+id/n_cover" android:layout_width="0dp" android:layout_height="0dp"/></LinearLayout>
+        <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">
+            <ImageView android:id="@+id/n_prev" android:layout_width="44dp" android:layout_height="40dp" android:padding="8dp" android:src="@drawable/n_prev"/>
+            <ImageView android:id="@+id/n_play" android:layout_width="52dp" android:layout_height="40dp" android:padding="6dp" android:src="@drawable/n_play"/>
+            <ImageView android:id="@+id/n_next" android:layout_width="44dp" android:layout_height="40dp" android:padding="8dp" android:src="@drawable/n_next"/>
+        </LinearLayout>
+</LinearLayout>

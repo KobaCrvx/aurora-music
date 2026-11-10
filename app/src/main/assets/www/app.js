@@ -70,7 +70,7 @@ if (window.I18N_X) for (const l of Object.keys(window.I18N_X)) Object.assign(I18
 const FONTS = ['System', 'Inter', 'Poppins', 'Montserrat', 'Playfair Display', 'Orbitron', 'Press Start 2P', 'Pacifico', 'Space Mono', 'Dancing Script', 'Bebas Neue'];
 const reduced = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } })();
 const DEF = { lang: (navigator.language || 'en').slice(0, 2), skin: 'modern', theme: 'dark', accent: '#1ed760', font: 'Inter', customFont: null, bgtype: 'none', bgcolor: '#14141c', bgblob: null, bgurl: '', dim: 35, blur: 0, anim: !reduced, trans: 'fade', vis: true, react: true,
-  jamendoId: '', wsize: 100, wfade: true, widle: 45, wsnap: true, ui: 100, radius: 16, panelA: 62, panelB: 14, density: 'normal', fxVig: false, fxGrain: false, immersive: true, speed: 100, stkLib: [],
+  jamendoId: '', ntfSkin: true, wsize: 100, wfade: true, widle: 45, wsnap: true, ui: 100, radius: 16, panelA: 62, panelB: 14, density: 'normal', fxVig: false, fxGrain: false, immersive: true, speed: 100, stkLib: [],
   look: {
     modern: { shape: 'round', aura: true },
     turntable: { wood: 'walnut', woodColor: '#6b4428', vinyl: 'black', lid: false, strobe: true, led: true, rpm: '33' },
@@ -571,24 +571,42 @@ async function skinArt(tr) {
   };
   try { return draw(img); } catch { try { return draw(null); } catch { return ''; } }
 }
+async function coverSmall(tr) {
+  const src = tr ? covers.get('t' + tr.id) : '';
+  if (!src) return '';
+  const im = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; setTimeout(() => r(null), 2500); });
+  if (!im) return '';
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 200; const g = c.getContext('2d');
+    const m = Math.min(im.width, im.height);
+    g.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, 200, 200);
+    return c.toDataURL('image/jpeg', .85);
+  } catch { return ''; }
+}
 let andBusy = false, andLast = '';
 async function pushAndroid(force) {
   if (!AND || andBusy) return;
   const tr = cur(), playing = !audio.paused && !audio.ended;
   const d = audio.duration && isFinite(audio.duration) ? audio.duration : ((tr && tr.dur) || 0);
-  const key = [playing, tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || '', Math.round(d)].join('|');
+  const mode = S.ntfSkin === false ? 'system' : 'skin';
+  const key = [playing, tr ? tr.id : '', S.skin, S.accent, mode, tr && tr.coverId || '', Math.round(d), S.look && S.look.display && S.look.display.color, mode === 'skin' && playing ? Math.floor(audio.currentTime / 3) : 0].join('|');
   const pos = Math.round(audio.currentTime * 1000);
   if (!force && key === andLast) return;
   andBusy = true;
   try {
     const artKey = [tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || ''].join('|');
-    if (pushAndroid.ak !== artKey) { pushAndroid.ak = artKey; pushAndroid.art = tr ? await skinArt(tr) : ''; }
+    const o = {};
+    if (pushAndroid.ak !== artKey) {
+      pushAndroid.ak = artKey;
+      o.art = tr ? await skinArt(tr) : '';
+      o.cov = tr ? await coverSmall(tr) : '';
+    }
     andLast = key;
     const nice = x => String(x || '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
-    AND.setState(JSON.stringify({ playing, title: tr ? nice(tr.title) : '', artist: tr ? nice(tr.artist) : '', dur: Math.round(d * 1000), pos, art: pushAndroid.art || '' }));
+    AND.setState(JSON.stringify(Object.assign({ playing, title: tr ? nice(tr.title) : '', artist: tr ? nice(tr.artist) : '', dur: Math.round(d * 1000), pos, mode, skin: S.skin, acc: S.accent || '#1ed760', dcol: (S.look && S.look.display && S.look.display.color) || '#ffffff' }, o)));
   } catch { } finally { andBusy = false; }
 }
-if (AND) { audio.addEventListener('seeked', () => pushAndroid(true)); setInterval(() => pushAndroid(false), 2000); }
+if (AND) { audio.addEventListener('seeked', () => pushAndroid(true)); setInterval(() => pushAndroid(false), 1000); }
 let lastPos = 0;
 function onTime() {
   const d = audio.duration || (cur() && cur().dur) || 0, c = audio.currentTime, p = d ? Math.min(1, c / d) : 0;
