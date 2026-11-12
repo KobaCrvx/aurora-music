@@ -521,7 +521,18 @@ function renderPlayerUI() {
   syncFake(); renderDisplay(); kick();
 }
 /* ============ Android: tarjeta de la notificación según el reproductor en uso ============ */
+const loadImg = src => new Promise(r => { if (!src) return r(null); const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; setTimeout(() => r(null), 2500); });
+async function dspPngSmall() {
+  const el = stageEl.querySelector('.dsp-png'), u = el && el.getAttribute('src'); if (!u) return '';
+  const im = await loadImg(u); if (!im) return '';
+  try {
+    const k = Math.min(1, 280 / Math.max(im.width, im.height)), w = Math.max(1, Math.round(im.width * k)), h = Math.max(1, Math.round(im.height * k));
+    const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h);
+    return c.toDataURL('image/png');
+  } catch { return ''; }
+}
 async function skinArt(tr) {
+  let dimg = null; if (S.skin === 'display') { const el = stageEl.querySelector('.dsp-png'); dimg = await loadImg(el && el.getAttribute('src')); }
   const N = 480, acc = S.accent || '#1ed760';
   let img = null; const src = tr ? covers.get('t' + tr.id) : '';
   if (src) img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; setTimeout(() => r(null), 2500); });
@@ -556,8 +567,9 @@ async function skinArt(tr) {
       g.fillStyle = '#c8c8cc'; g.fillRect(40, 340, 188, 3); g.fillStyle = acc; g.fillRect(40, 340, 90, 3);
     } else if (sk === 'display') {
       g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
-      if (im) { g.globalAlpha = .45; const s = Math.max(N / im.width, N / im.height); g.drawImage(im, (N - im.width * s) / 2, (N - im.height * s) / 2, im.width * s, im.height * s); g.globalAlpha = 1; }
-      g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, N, N);
+      if (dimg) { const s = Math.min(N / dimg.width, N / dimg.height); g.drawImage(dimg, (N - dimg.width * s) / 2, (N - dimg.height * s) / 2, dimg.width * s, dimg.height * s); }
+      else if (im) { g.globalAlpha = .45; const s = Math.max(N / im.width, N / im.height); g.drawImage(im, (N - im.width * s) / 2, (N - im.height * s) / 2, im.width * s, im.height * s); g.globalAlpha = 1; }
+      if (!dimg) { g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, N, N); }
       g.fillStyle = S.look && S.look.display && S.look.display.color || '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
       const t = (tr && tr.title) || 'Aurora Music'; let fs = 58; g.font = '700 ' + fs + 'px sans-serif'; while (g.measureText(t).width > N - 60 && fs > 24) { fs -= 4; g.font = '700 ' + fs + 'px sans-serif'; }
       g.fillText(t, N / 2, N / 2 - 14); g.globalAlpha = .7; g.font = '300 30px sans-serif'; g.fillText((tr && tr.artist) || '', N / 2, N / 2 + 36); g.globalAlpha = 1;
@@ -595,12 +607,13 @@ async function pushAndroid(force) {
   if (!force && key === andLast) return;
   andBusy = true;
   try {
-    const artKey = [tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || ''].join('|');
+    const artKey = [tr ? tr.id : '', S.skin, S.accent, tr && tr.coverId || '', S.skin === 'display' ? [(S.look.display || {}).png, (S.look.display || {}).pngN, (S.look.display || {}).key, (S.look.display || {}).color].join(',') : ''].join('|');
     const o = {};
     if (pushAndroid.ak !== artKey) {
       pushAndroid.ak = artKey;
       o.art = tr ? await skinArt(tr) : '';
       o.cov = tr ? await coverSmall(tr) : '';
+      o.dpng = S.skin === 'display' ? await dspPngSmall() : '';
     }
     andLast = key;
     const nice = x => String(x || '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();

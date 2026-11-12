@@ -27,6 +27,7 @@ class SkinUi {
     final long dur, pos;
     final int acc, dcol;
     final Bitmap cover;
+    Bitmap dpng;
 
     SkinUi(Context c, boolean playing, String title, String artist, String skin, long dur, long pos, int acc, int dcol, Bitmap cover) {
         this.ctx = c;
@@ -61,6 +62,20 @@ class SkinUi {
         }
     }
 
+    static void saveDpng(Context c, Bitmap b) {
+        try {
+            File f = new File(c.getFilesDir(), "dpng.png");
+            if (b == null) {
+                f.delete();
+                return;
+            }
+            FileOutputStream o = new FileOutputStream(f);
+            b.compress(Bitmap.CompressFormat.PNG, 100, o);
+            o.close();
+        } catch (Exception ignored) {
+        }
+    }
+
     static void markPaused(Context c) {
         c.getSharedPreferences("widget", Context.MODE_PRIVATE).edit().putBoolean("playing", false).apply();
     }
@@ -74,12 +89,22 @@ class SkinUi {
             } catch (Exception ignored) {
             }
         }
-        String t = p.getString("title", "");
-        if (t.length() == 0) {
-            return new SkinUi(c, false, "Aurora Music", "Toca para abrir", p.getString("skin", "modern"), 0, 0, p.getInt("acc", 0xFF1ED760), p.getInt("dcol", 0xFFFFFFFF), null);
+        Bitmap dp = null;
+        try {
+            File df = new File(c.getFilesDir(), "dpng.png");
+            if (df.exists()) dp = BitmapFactory.decodeFile(df.getAbsolutePath());
+        } catch (Exception ignored) {
         }
-        return new SkinUi(c, p.getBoolean("playing", false), t, p.getString("artist", ""), p.getString("skin", "modern"),
-                p.getLong("dur", 0), p.getLong("pos", 0), p.getInt("acc", 0xFF1ED760), p.getInt("dcol", 0xFFFFFFFF), cv);
+        String t = p.getString("title", "");
+        SkinUi u;
+        if (t.length() == 0) {
+            u = new SkinUi(c, false, "Aurora Music", "Toca para abrir", p.getString("skin", "modern"), 0, 0, p.getInt("acc", 0xFF1ED760), p.getInt("dcol", 0xFFFFFFFF), null);
+        } else {
+            u = new SkinUi(c, p.getBoolean("playing", false), t, p.getString("artist", ""), p.getString("skin", "modern"),
+                    p.getLong("dur", 0), p.getLong("pos", 0), p.getInt("acc", 0xFF1ED760), p.getInt("dcol", 0xFFFFFFFF), cv);
+        }
+        u.dpng = dp;
+        return u;
     }
 
     static String fmt(long ms) {
@@ -171,7 +196,9 @@ class SkinUi {
 
     /** Fondo con esquinas redondeadas; en MP3 y Retro el propio aparato ya es el fondo. */
     void applyBg(RemoteViews v, boolean bodyIsBg) {
-        if (bodyIsBg && ("mp3".equals(skin) || "retro".equals(skin))) {
+        if (bodyIsBg && ("display".equals(skin) && dpng != null)) {
+            v.setViewVisibility(R.id.n_bg, android.view.View.GONE);
+        } else if (bodyIsBg && ("mp3".equals(skin) || "retro".equals(skin))) {
             v.setViewVisibility(R.id.n_bg, android.view.View.GONE);
         } else {
             v.setInt(R.id.n_bg, "setColorFilter", bg());
@@ -200,6 +227,7 @@ class SkinUi {
             txt = dcol; ico = dcol;
             big = new RemoteViews(pk, R.layout.n_display);
             big.setInt(R.id.n_line, "setBackgroundColor", acc);
+            if (dpng != null) big.setImageViewBitmap(R.id.n_dpng, dpng);
             cdp = 4;
         } else {
             big = new RemoteViews(pk, R.layout.n_modern);

@@ -40,6 +40,7 @@ public class PlaybackService extends Service {
     static final int ID = 7;
 
     static PlaybackService inst;
+    static String pending;
 
     NotificationManager nm;
     PowerManager.WakeLock wl;
@@ -51,7 +52,7 @@ public class PlaybackService extends Service {
     String title = "";
     String artist = "";
     long dur = 0, pos = 0;
-    Bitmap art, cover;
+    Bitmap art, cover, dpng;
     String mode = "system", skin = "modern";
     int acc = 0xFF1ED760, dcol = 0xFFFFFFFF;
 
@@ -77,8 +78,9 @@ public class PlaybackService extends Service {
                 inst.update(o);
                 return;
             }
+            pending = json;
             Intent i = new Intent(c, PlaybackService.class);
-            i.putExtra("json", json.length() < 150000 ? json : o.put("art", "").put("cov", "").toString());
+            i.putExtra("p", true);
             if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i);
             else c.startService(i);
         } catch (Exception ignored) {
@@ -139,7 +141,7 @@ public class PlaybackService extends Service {
             MainActivity.command(c);
             return START_NOT_STICKY;
         }
-        String js = intent.getStringExtra("json");
+        String js = intent.getBooleanExtra("p", false) ? pending : intent.getStringExtra("json");
         if (js != null) {
             try {
                 update(new JSONObject(js));
@@ -175,13 +177,17 @@ public class PlaybackService extends Service {
         }
         if (o.has("art")) this.art = decode(o.optString("art"));
         if (o.has("cov")) this.cover = decode(o.optString("cov"));
+        if (o.has("dpng")) {
+            this.dpng = decode(o.optString("dpng"));
+            SkinUi.saveDpng(this, this.dpng);
+        }
 
         try {
         MediaMetadata.Builder md = new MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_TITLE, this.title)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, this.artist)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, dur > 0 ? dur : -1);
-        Bitmap meta = this.cover != null ? this.cover : this.art;
+        Bitmap meta = ("skin".equals(mode) && this.art != null) ? this.art : (this.cover != null ? this.cover : this.art);
         if (meta != null) md.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, meta);
         session.setMetadata(md.build());
 
@@ -289,7 +295,7 @@ public class PlaybackService extends Service {
                 .setStyle(new Notification.MediaStyle()
                         .setMediaSession(session.getSessionToken())
                         .setShowActionsInCompactView(0, 1, 2));
-        Bitmap meta = cover != null ? cover : art;
+        Bitmap meta = ("skin".equals(mode) && art != null) ? art : (cover != null ? cover : art);
         if (meta != null) b.setLargeIcon(meta);
         return b.build();
     }
@@ -297,6 +303,7 @@ public class PlaybackService extends Service {
     // ---------- Notificacion con el diseno del reproductor elegido ----------
     Notification buildSkin() {
         SkinUi ui = new SkinUi(this, playing, title, artist, skin, dur, pos, acc, dcol, cover);
+        ui.dpng = dpng;
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH) : new Notification.Builder(this);
         Intent open = new Intent(this, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
