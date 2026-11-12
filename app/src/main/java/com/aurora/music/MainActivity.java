@@ -221,6 +221,20 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    /** Deja ver el reproductor encima de la pantalla de bloqueo mientras la app esta abierta. */
+    void setLock(boolean on) {
+        try {
+            if (Build.VERSION.SDK_INT >= 27) {
+                setShowWhenLocked(on);
+            } else if (on) {
+                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            } else {
+                getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     /** Atras no cierra la app: la manda al fondo para que la musica siga sonando. */
     @Override
     public void onBackPressed() {
@@ -257,6 +271,16 @@ public class MainActivity extends Activity {
     class Bridge {
         @JavascriptInterface
         public void setState(String json) {
+            try {
+                final boolean lk = new org.json.JSONObject(json).optBoolean("lock", true);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setLock(lk);
+                    }
+                });
+            } catch (Exception ignored) {
+            }
             PlaybackService.push(MainActivity.this, json);
         }
     }

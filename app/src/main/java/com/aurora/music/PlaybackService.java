@@ -45,6 +45,8 @@ public class PlaybackService extends Service {
     PowerManager.WakeLock wl;
     MediaSession session;
     boolean foreground = false;
+    String lastWk = "";
+    long lastWt = 0;
     boolean playing = false;
     String title = "";
     String artist = "";
@@ -201,6 +203,17 @@ public class PlaybackService extends Service {
                 // sin notificacion la musica sigue sonando
             }
         }
+        try {
+            String wk = playing + "|" + title + "|" + skin + "|" + acc + "|" + (cover != null ? cover.hashCode() : 0);
+            long now = SystemClock.elapsedRealtime();
+            if (!wk.equals(lastWk) || now - lastWt > 10000) {
+                lastWk = wk;
+                lastWt = now;
+                SkinUi.save(this, playing, title, artist, skin, dur, pos, acc, dcol, cover);
+                AuroraWidget.refresh(this);
+            }
+        } catch (Throwable ignored) {
+        }
         if (playing) {
             if (!wl.isHeld()) wl.acquire(10 * 60 * 60 * 1000L);
         } else if (wl.isHeld()) {
@@ -267,98 +280,8 @@ public class PlaybackService extends Service {
     }
 
     // ---------- Notificacion con el diseno del reproductor elegido ----------
-    static String fmt(long ms) {
-        long s = Math.max(0, ms / 1000);
-        return (s / 60) + ":" + (s % 60 < 10 ? "0" : "") + (s % 60);
-    }
-
-    static int mix(int c, int to, float t) {
-        return Color.rgb((int) (Color.red(c) * (1 - t) + Color.red(to) * t), (int) (Color.green(c) * (1 - t) + Color.green(to) * t),
-                (int) (Color.blue(c) * (1 - t) + Color.blue(to) * t));
-    }
-
-    /** Recorta la portada: circulo (r = 0.5) o esquinas redondeadas. */
-    Bitmap shaped(Bitmap src, int px, float radiusFrac) {
-        Bitmap out = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888);
-        Canvas cv = new Canvas(out);
-        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-        float r = px * radiusFrac;
-        if (src == null) {
-            p.setColor(mix(acc, 0xFF101014, 0.35f));
-            cv.drawRoundRect(new RectF(0, 0, px, px), r, r, p);
-            p.setColor(0xDDFFFFFF);
-            p.setTextAlign(Paint.Align.CENTER);
-            p.setTextSize(px * 0.5f);
-            String ch = title.length() > 0 ? title.substring(0, 1).toUpperCase() : "\u266A";
-            cv.drawText(ch, px / 2f, px * 0.67f, p);
-            return out;
-        }
-        cv.drawRoundRect(new RectF(0, 0, px, px), r, r, p);
-        p.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-        int w = src.getWidth(), h = src.getHeight(), m = Math.min(w, h);
-        Rect from = new Rect((w - m) / 2, (h - m) / 2, (w - m) / 2 + m, (h - m) / 2 + m);
-        cv.drawBitmap(src, from, new Rect(0, 0, px, px), p);
-        return out;
-    }
-
-    void common(RemoteViews v, int txt, int sub, int ico, float coverR, int coverDp, boolean full) {
-        float d = getResources().getDisplayMetrics().density;
-        v.setTextViewText(R.id.n_title, title);
-        v.setTextViewText(R.id.n_artist, artist);
-        v.setTextColor(R.id.n_title, txt);
-        v.setTextColor(R.id.n_artist, sub);
-        v.setImageViewBitmap(R.id.n_cover, shaped(cover, Math.min(Math.round(coverDp * d), 220), coverR));
-        v.setImageViewResource(R.id.n_play, playing ? R.drawable.n_pause : R.drawable.n_play);
-        v.setInt(R.id.n_play, "setColorFilter", ico);
-        v.setInt(R.id.n_prev, "setColorFilter", ico);
-        v.setInt(R.id.n_next, "setColorFilter", ico);
-        v.setOnClickPendingIntent(R.id.n_prev, cmd("prev", 11));
-        v.setOnClickPendingIntent(R.id.n_play, cmd("toggle", 12));
-        v.setOnClickPendingIntent(R.id.n_next, cmd("next", 13));
-        if (full) {
-            v.setInt(R.id.n_fill, "setImageLevel", dur > 0 ? (int) Math.min(10000, pos * 10000 / dur) : 0);
-            v.setInt(R.id.n_fill, "setColorFilter", acc);
-            v.setTextColor(R.id.n_cur, sub);
-            v.setTextColor(R.id.n_dur, sub);
-            v.setChronometer(R.id.n_cur, SystemClock.elapsedRealtime() - pos, null, playing);
-            v.setTextViewText(R.id.n_dur, dur > 0 ? fmt(dur) : "");
-        }
-    }
-
     Notification buildSkin() {
-        int bg, txt = 0xFFFFFFFF, sub = 0xB3FFFFFF, ico = 0xFFFFFFFF;
-        RemoteViews big;
-        float cr = 0.12f;
-        int cdp = 104;
-        if ("turntable".equals(skin)) {
-            bg = 0xFFD9DCE0; txt = 0xFF1B1B1F; sub = 0xFF55585E; ico = 0xFF2A2A2E;
-            big = new RemoteViews(getPackageName(), R.layout.n_turntable);
-            big.setImageViewResource(R.id.n_arm, playing ? R.drawable.n_arm_on : R.drawable.n_arm_off);
-            cr = 0.5f; cdp = 52;
-        } else if ("mp3".equals(skin)) {
-            bg = 0xFF000000;
-            big = new RemoteViews(getPackageName(), R.layout.n_mp3);
-            cr = 0.04f; cdp = 46;
-        } else if ("retro".equals(skin)) {
-            bg = 0xFF000000; txt = 0xFF0D1C28; sub = 0xFF0D1C28; ico = 0xFF2A2A2E;
-            big = new RemoteViews(getPackageName(), R.layout.n_retro);
-            cr = 0.0f; cdp = 40;
-        } else if ("display".equals(skin)) {
-            bg = 0xFF000000; txt = dcol; ico = dcol;
-            big = new RemoteViews(getPackageName(), R.layout.n_display);
-            big.setInt(R.id.n_line, "setBackgroundColor", acc);
-            cdp = 4;
-        } else {
-            bg = mix(acc, 0xFF0B0B0F, 0.72f);
-            big = new RemoteViews(getPackageName(), R.layout.n_modern);
-        }
-        common(big, txt, sub, ico, cr, cdp, true);
-        big.setInt(R.id.n_root, "setBackgroundColor", bg);
-
-        RemoteViews small = new RemoteViews(getPackageName(), R.layout.n_small);
-        common(small, txt, sub, ico, "turntable".equals(skin) ? 0.5f : 0.12f, 48, false);
-        small.setInt(R.id.n_root, "setBackgroundColor", bg);
-
+        SkinUi ui = new SkinUi(this, playing, title, artist, skin, dur, pos, acc, dcol, cover);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(this, CH) : new Notification.Builder(this);
         Intent open = new Intent(this, MainActivity.class);
         open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -372,8 +295,8 @@ public class PlaybackService extends Service {
                 .setOnlyAlertOnce(true)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setStyle(new Notification.DecoratedCustomViewStyle())
-                .setCustomContentView(small)
-                .setCustomBigContentView(big);
+                .setCustomContentView(ui.small(false))
+                .setCustomBigContentView(ui.big(false));
         if (Build.VERSION.SDK_INT >= 31) b.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
         return b.build();
     }
@@ -387,6 +310,11 @@ public class PlaybackService extends Service {
         }
         if (inst == this) inst = null;
         foreground = false;
+        try {
+            SkinUi.markPaused(this);
+            AuroraWidget.refresh(this);
+        } catch (Throwable ignored) {
+        }
         super.onDestroy();
     }
 
