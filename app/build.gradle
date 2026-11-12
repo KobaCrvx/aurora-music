@@ -10,8 +10,17 @@ android {
         applicationId "com.aurora.music"
         minSdk 24
         targetSdk 34
-        versionCode 1
+        versionCode (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
         versionName "1.0"
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file('aurora-debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
     }
 
     buildTypes {
