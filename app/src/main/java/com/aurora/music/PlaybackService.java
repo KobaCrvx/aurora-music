@@ -16,6 +16,8 @@ import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Base64;
@@ -51,7 +53,18 @@ public class PlaybackService extends Service {
     String mode = "system", skin = "modern";
     int acc = 0xFF1ED760, dcol = 0xFFFFFFFF;
 
-    static void push(Context c, String json) {
+    static final Handler MAIN = new Handler(Looper.getMainLooper());
+
+    static void push(final Context c, final String json) {
+        MAIN.post(new Runnable() {
+            @Override
+            public void run() {
+                push2(c, json);
+            }
+        });
+    }
+
+    static void push2(Context c, String json) {
         try {
             JSONObject o = new JSONObject(json);
             if (o.optString("title").length() == 0) {
@@ -63,7 +76,7 @@ public class PlaybackService extends Service {
                 return;
             }
             Intent i = new Intent(c, PlaybackService.class);
-            i.putExtra("json", json.length() < 600000 ? json : o.put("art", "").put("cov", "").toString());
+            i.putExtra("json", json.length() < 150000 ? json : o.put("art", "").put("cov", "").toString());
             if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(i);
             else c.startService(i);
         } catch (Exception ignored) {
@@ -128,7 +141,13 @@ public class PlaybackService extends Service {
         if (js != null) {
             try {
                 update(new JSONObject(js));
-            } catch (Exception ignored) {
+            } catch (Throwable ignored) {
+            }
+            if (!foreground) {
+                try {
+                    show(buildSystem());
+                } catch (Throwable ignored) {
+                }
             }
         }
         return START_NOT_STICKY;
@@ -155,6 +174,7 @@ public class PlaybackService extends Service {
         if (o.has("art")) this.art = decode(o.optString("art"));
         if (o.has("cov")) this.cover = decode(o.optString("cov"));
 
+        try {
         MediaMetadata.Builder md = new MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_TITLE, this.title)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, this.artist)
@@ -168,8 +188,27 @@ public class PlaybackService extends Service {
                 .setActions(acts)
                 .setState(playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, pos, playing ? 1f : 0f, SystemClock.elapsedRealtime())
                 .build());
+        } catch (Throwable ignored) {
+        }
 
         Notification n = build();
+        try {
+            show(n);
+        } catch (Throwable e1) {
+            try {
+                show(buildSystem());
+            } catch (Throwable e2) {
+                // sin notificacion la musica sigue sonando
+            }
+        }
+        if (playing) {
+            if (!wl.isHeld()) wl.acquire(10 * 60 * 60 * 1000L);
+        } else if (wl.isHeld()) {
+            wl.release();
+        }
+    }
+
+    void show(Notification n) {
         if (!foreground) {
             if (Build.VERSION.SDK_INT >= 29) {
                 startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
@@ -179,11 +218,6 @@ public class PlaybackService extends Service {
             foreground = true;
         } else {
             nm.notify(ID, n);
-        }
-        if (playing) {
-            if (!wl.isHeld()) wl.acquire(10 * 60 * 60 * 1000L);
-        } else if (wl.isHeld()) {
-            wl.release();
         }
     }
 
@@ -273,7 +307,7 @@ public class PlaybackService extends Service {
         v.setTextViewText(R.id.n_artist, artist);
         v.setTextColor(R.id.n_title, txt);
         v.setTextColor(R.id.n_artist, sub);
-        v.setImageViewBitmap(R.id.n_cover, shaped(cover, Math.round(coverDp * d), coverR));
+        v.setImageViewBitmap(R.id.n_cover, shaped(cover, Math.min(Math.round(coverDp * d), 220), coverR));
         v.setImageViewResource(R.id.n_play, playing ? R.drawable.n_pause : R.drawable.n_play);
         v.setInt(R.id.n_play, "setColorFilter", ico);
         v.setInt(R.id.n_prev, "setColorFilter", ico);

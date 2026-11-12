@@ -731,7 +731,7 @@ function applyI18n() {
 function bind() {
   $$('nav button').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
   $('#btn-import').onclick = async () => { const f = await chooseFile('audio/*,.mp3,.m4a,.flac,.ogg,.opus,.wav,.aac', true); if (f.length) importFiles(f); };
-  $('#btn-url').onclick = addLink;
+  if ($('#btn-url')) $('#btn-url').onclick = addLink;
   $('#q').addEventListener('input', renderLib);
   $('#btn-newpl').onclick = createPlaylist;
 
@@ -1678,7 +1678,7 @@ async function discAdd(i, btn) {
 }
 (() => {
   const dlg = document.getElementById('disc'); if (!dlg) return;
-  $('#btn-disc').onclick = () => { $('#disc-keyin').value = S.jamendoId || ''; openDlg(dlg); setTimeout(() => $('#disc-q').focus(), 50); };
+  if ($('#btn-disc')) $('#btn-disc').onclick = () => { $('#disc-keyin').value = S.jamendoId || ''; openDlg(dlg); setTimeout(() => $('#disc-q').focus(), 50); };
   $('#disc-x').onclick = () => dlg.close();
   dlg.addEventListener('close', stopPrev);
   $('#disc-go').onclick = discSearch;

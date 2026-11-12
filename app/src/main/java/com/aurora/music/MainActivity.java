@@ -1,6 +1,15 @@
 package com.aurora.music;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
+import android.webkit.RenderProcessGoneDetail;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -40,6 +49,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         inst = this;
+        installCrashLog();
 
         web = new WebView(this);
         web.setBackgroundColor(0xFF0B0B0F);
@@ -78,6 +88,22 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                // si el motor web se cierra, se recarga en vez de cerrar toda la app
+                final WebView old = view;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            old.loadUrl("https://" + HOST + "/index.html");
+                        } catch (Exception ignored) {
+                        }
+                    }
+                });
+                return true;
+            }
+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();
                 if (u != null && HOST.equals(u.getHost())) return false;
@@ -95,7 +121,27 @@ public class MainActivity extends Activity {
                 if (chooser != null) chooser.onReceiveValue(null);
                 chooser = cb;
                 try {
-                    startActivityForResult(params.createIntent(), REQ_FILE);
+                    Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    ArrayList<String> mimes = new ArrayList<String>();
+                    String[] acc = params.getAcceptTypes();
+                    if (acc != null) {
+                        for (String t : acc) {
+                            if (t != null && t.indexOf('/') > 0 && !mimes.contains(t)) mimes.add(t);
+                        }
+                    }
+                    if (mimes.isEmpty()) mimes.add("*/*");
+                    if (mimes.contains("audio/*") && !mimes.contains("application/ogg")) mimes.add("application/ogg");
+                    if (mimes.size() == 1) {
+                        i.setType(mimes.get(0));
+                    } else {
+                        i.setType("*/*");
+                        i.putExtra(Intent.EXTRA_MIME_TYPES, mimes.toArray(new String[0]));
+                    }
+                    if (params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) {
+                        i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                    }
+                    startActivityForResult(Intent.createChooser(i, null), REQ_FILE);
                 } catch (Exception e) {
                     chooser = null;
                     return false;
@@ -109,6 +155,33 @@ public class MainActivity extends Activity {
         }
 
         web.loadUrl("https://" + HOST + "/index.html");
+    }
+
+    /** Guarda el motivo si la app se cierra sola, y lo muestra al abrirla otra vez. */
+    void installCrashLog() {
+        final SharedPreferences sp = getSharedPreferences("crash", MODE_PRIVATE);
+        final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                try {
+                    StringWriter sw = new StringWriter();
+                    e.printStackTrace(new PrintWriter(sw));
+                    String txt = sw.toString();
+                    sp.edit().putString("last", txt.length() > 1800 ? txt.substring(0, 1800) : txt).commit();
+                } catch (Throwable ignored) {
+                }
+                if (prev != null) prev.uncaughtException(t, e);
+            }
+        });
+        String last = sp.getString("last", null);
+        if (last != null) {
+            sp.edit().remove("last").apply();
+            try {
+                new AlertDialog.Builder(this).setTitle("Aurora se cerró (error)").setMessage(last).setPositiveButton("OK", null).show();
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     static String mimeOf(String p) {
@@ -130,7 +203,16 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQ_FILE) {
             if (chooser != null) {
-                Uri[] r = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+                Uri[] r = null;
+                if (resultCode == RESULT_OK && data != null) {
+                    ClipData cd = data.getClipData();
+                    if (cd != null && cd.getItemCount() > 0) {
+                        r = new Uri[cd.getItemCount()];
+                        for (int k = 0; k < r.length; k++) r[k] = cd.getItemAt(k).getUri();
+                    } else if (data.getData() != null) {
+                        r = new Uri[]{data.getData()};
+                    }
+                }
                 chooser.onReceiveValue(r);
                 chooser = null;
             }
