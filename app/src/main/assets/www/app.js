@@ -994,6 +994,7 @@ function syncPip() {
   } catch { }
 }
 async function openPip() {
+  if (AND) return; // en Android no hay ventana flotante: se usan la notificación y el widget
   if (pipWin) { closePip(); return; }
   if (decorOn) setDecor(false);
   const { w, h } = pipSize(); let win = null;
