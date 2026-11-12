@@ -181,7 +181,8 @@ public class PlaybackService extends Service {
                 .putString(MediaMetadata.METADATA_KEY_TITLE, this.title)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, this.artist)
                 .putLong(MediaMetadata.METADATA_KEY_DURATION, dur > 0 ? dur : -1);
-        if (this.art != null) md.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, this.art);
+        Bitmap meta = this.cover != null ? this.cover : this.art;
+        if (meta != null) md.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, meta);
         session.setMetadata(md.build());
 
         long acts = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_PLAY_PAUSE
@@ -193,16 +194,14 @@ public class PlaybackService extends Service {
         } catch (Throwable ignored) {
         }
 
-        Notification n = build();
+        // 1) tarjeta de musica del sistema (pantalla de bloqueo y panel), con la portada
         try {
-            show(n);
-        } catch (Throwable e1) {
-            try {
-                show(buildSystem());
-            } catch (Throwable e2) {
-                // sin notificacion la musica sigue sonando
-            }
+            show(buildSystem());
+        } catch (Throwable e2) {
+            // sin notificacion la musica sigue sonando
         }
+        // 2) notificacion con el diseno de tu reproductor (solo en el panel)
+        refreshSkin();
         try {
             String wk = playing + "|" + title + "|" + skin + "|" + acc + "|" + (cover != null ? cover.hashCode() : 0);
             long now = SystemClock.elapsedRealtime();
@@ -244,6 +243,20 @@ public class PlaybackService extends Service {
         return new Notification.Action.Builder(Icon.createWithResource(this, res), label, cmd(c, code)).build();
     }
 
+    static final int SKIN_ID = 8;
+
+    void refreshSkin() {
+        try {
+            boolean safe = getSharedPreferences("crash", MODE_PRIVATE).getBoolean("safe", false);
+            if ("skin".equals(mode) && !safe) {
+                nm.notify(SKIN_ID, buildSkin());
+            } else {
+                nm.cancel(SKIN_ID);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     Notification build() {
         boolean safe = getSharedPreferences("crash", MODE_PRIVATE).getBoolean("safe", false);
         if ("skin".equals(mode) && !safe) {
@@ -276,7 +289,8 @@ public class PlaybackService extends Service {
                 .setStyle(new Notification.MediaStyle()
                         .setMediaSession(session.getSessionToken())
                         .setShowActionsInCompactView(0, 1, 2));
-        if (art != null) b.setLargeIcon(art);
+        Bitmap meta = cover != null ? cover : art;
+        if (meta != null) b.setLargeIcon(meta);
         return b.build();
     }
 
@@ -294,16 +308,19 @@ public class PlaybackService extends Service {
                 .setOngoing(true)
                 .setShowWhen(false)
                 .setOnlyAlertOnce(true)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setVisibility(Notification.VISIBILITY_SECRET)
                 .setStyle(new Notification.DecoratedCustomViewStyle())
                 .setCustomContentView(ui.small(false))
                 .setCustomBigContentView(ui.big(false));
-        if (Build.VERSION.SDK_INT >= 31) b.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE);
         return b.build();
     }
 
     @Override
     public void onDestroy() {
+        try {
+            nm.cancel(SKIN_ID);
+        } catch (Throwable ignored) {
+        }
         if (wl != null && wl.isHeld()) wl.release();
         if (session != null) {
             session.setActive(false);

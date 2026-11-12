@@ -164,8 +164,18 @@ class SkinUi {
 
     int bg() {
         if ("turntable".equals(skin)) return 0xFFD9DCE0;
-        if ("mp3".equals(skin) || "retro".equals(skin) || "display".equals(skin)) return 0xFF000000;
+        if ("retro".equals(skin)) return 0xFFD5D7DB;
+        if ("mp3".equals(skin) || "display".equals(skin)) return 0xFF000000;
         return mix(acc, 0xFF0B0B0F, 0.72f);
+    }
+
+    /** Fondo con esquinas redondeadas; en MP3 y Retro el propio aparato ya es el fondo. */
+    void applyBg(RemoteViews v, boolean bodyIsBg) {
+        if (bodyIsBg && ("mp3".equals(skin) || "retro".equals(skin))) {
+            v.setViewVisibility(R.id.n_bg, android.view.View.GONE);
+        } else {
+            v.setInt(R.id.n_bg, "setColorFilter", bg());
+        }
     }
 
     RemoteViews big(boolean widget) {
@@ -195,7 +205,7 @@ class SkinUi {
             big = new RemoteViews(pk, R.layout.n_modern);
         }
         common(big, txt, sub, ico, cr, cdp, true, widget);
-        big.setInt(R.id.n_root, "setBackgroundColor", bg());
+        applyBg(big, true);
         return big;
     }
 
@@ -206,7 +216,7 @@ class SkinUi {
         else if ("display".equals(skin)) { txt = dcol; ico = dcol; }
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.n_small);
         common(v, txt, sub, ico, "turntable".equals(skin) ? 0.5f : 0.12f, 48, false, widget);
-        v.setInt(R.id.n_root, "setBackgroundColor", bg());
+        applyBg(v, false);
         return v;
     }
 }

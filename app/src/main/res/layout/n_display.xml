@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="132dp" android:orientation="vertical" android:gravity="center_horizontal" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="10dp" android:paddingBottom="6dp">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView android:id="@+id/n_bg" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/n_rr"/>
+<LinearLayout android:id="@+id/n_inner" android:layout_width="match_parent" android:layout_height="132dp" android:orientation="vertical" android:gravity="center_horizontal" android:paddingStart="20dp" android:paddingEnd="20dp" android:paddingTop="10dp" android:paddingBottom="6dp">
         <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
         <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:singleLine="true" android:ellipsize="end" android:fontFamily="sans-serif-light" android:textSize="22sp" android:textColor="#FFFFFFFF"/>
         <TextView android:id="@+id/n_artist" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:singleLine="true" android:ellipsize="end" android:fontFamily="sans-serif-light" android:textSize="14sp" android:textColor="#B3FFFFFF"/>
@@ -16,3 +18,4 @@
             <ImageView android:id="@+id/n_next" android:layout_width="44dp" android:layout_height="40dp" android:padding="8dp" android:src="@drawable/n_next"/>
         </LinearLayout>
 </LinearLayout>
+</FrameLayout>

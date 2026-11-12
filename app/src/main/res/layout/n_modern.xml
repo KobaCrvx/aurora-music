@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="132dp" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView android:id="@+id/n_bg" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/n_rr"/>
+<LinearLayout android:id="@+id/n_inner" android:layout_width="match_parent" android:layout_height="132dp" android:orientation="horizontal" android:gravity="center_vertical" android:padding="12dp">
     <ImageView android:id="@+id/n_cover" android:layout_width="104dp" android:layout_height="104dp" android:scaleType="centerCrop"/>
     <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="14dp">
-        <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:ellipsize="end" android:textStyle="bold" android:textSize="16sp" android:textColor="#FFFFFFFF"/>
+        <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:ellipsize="end" android:textStyle="bold" android:textSize="17sp" android:textColor="#FFFFFFFF"/>
         <TextView android:id="@+id/n_artist" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:ellipsize="end" android:textSize="13sp" android:textColor="#B3FFFFFF"/>
         <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
         <FrameLayout android:layout_width="match_parent" android:layout_height="4dp">
@@ -29,3 +31,4 @@
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
+</FrameLayout>

@@ -278,7 +278,7 @@ public class MainActivity extends Activity {
         public void setState(String json) {
             try {
                 org.json.JSONObject jo = new org.json.JSONObject(json);
-                final boolean lk = jo.optBoolean("lock", true);
+                final boolean lk = jo.optBoolean("lock", false);
                 String md = jo.optString("mode", "system");
                 if ("skin".equals(md) && "system".equals(lastMode)) {
                     getSharedPreferences("crash", MODE_PRIVATE).edit().putBoolean("safe", false).apply();

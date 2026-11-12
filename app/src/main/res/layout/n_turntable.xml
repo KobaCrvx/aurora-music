@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="140dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="8dp" android:paddingEnd="12dp" android:paddingTop="6dp" android:paddingBottom="6dp">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView android:id="@+id/n_bg" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/n_rr"/>
+<LinearLayout android:id="@+id/n_inner" android:layout_width="match_parent" android:layout_height="140dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="8dp" android:paddingEnd="12dp" android:paddingTop="6dp" android:paddingBottom="6dp">
     <FrameLayout android:layout_width="150dp" android:layout_height="128dp">
         <ImageView android:id="@+id/n_disc" android:layout_width="124dp" android:layout_height="124dp" android:layout_gravity="center_vertical|start" android:scaleType="fitCenter" android:src="@drawable/n_vinyl"/>
         <ViewFlipper android:id="@+id/n_spin" android:layout_width="124dp" android:layout_height="124dp" android:layout_gravity="center_vertical|start" android:autoStart="true" android:flipInterval="90">
@@ -14,7 +16,7 @@
         <ImageView android:id="@+id/n_arm" android:layout_width="50dp" android:layout_height="92dp" android:layout_gravity="top|end" android:scaleType="fitXY" android:src="@drawable/n_arm_off"/>
     </FrameLayout>
     <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="6dp">
-        <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:ellipsize="end" android:textStyle="bold" android:textSize="16sp" android:textColor="#FFFFFFFF"/>
+        <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:ellipsize="end" android:textStyle="bold" android:textSize="17sp" android:textColor="#FFFFFFFF"/>
         <TextView android:id="@+id/n_artist" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:ellipsize="end" android:textSize="13sp" android:textColor="#B3FFFFFF"/>
         <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
         <FrameLayout android:layout_width="match_parent" android:layout_height="4dp">
@@ -41,3 +43,4 @@
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
+</FrameLayout>
