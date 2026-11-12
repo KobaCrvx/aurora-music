@@ -29,19 +29,13 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".CmdActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:theme="@style/Trans" />
-
         <receiver
             android:name=".AuroraWidget"
             android:exported="false"
             android:label="Aurora Music">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.aurora.music.WIDGET_CMD" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

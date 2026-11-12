@@ -119,9 +119,10 @@ class SkinUi {
     /** Boton: en la notificacion habla con el servicio; en el widget abre un puente transparente que funciona aunque la app este cerrada. */
     PendingIntent click(String cmd, int code, boolean widget) {
         if (widget) {
-            Intent i = new Intent(ctx, CmdActivity.class);
+            Intent i = new Intent(ctx, AuroraWidget.class);
+            i.setAction(AuroraWidget.ACTION);
             i.putExtra("c", cmd);
-            return PendingIntent.getActivity(ctx, 100 + code, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            return PendingIntent.getBroadcast(ctx, 100 + code, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         }
         Intent i = new Intent(ctx, PlaybackService.class);
         i.putExtra("c", cmd);
@@ -143,6 +144,15 @@ class SkinUi {
         v.setOnClickPendingIntent(R.id.n_play, click("toggle", 12, widget));
         v.setOnClickPendingIntent(R.id.n_next, click("next", 13, widget));
         if (full) {
+            if (!"display".equals(skin)) {
+                v.setViewVisibility(R.id.n_eq, playing ? android.view.View.VISIBLE : android.view.View.INVISIBLE);
+                int[] ef = {R.id.n_eqf0, R.id.n_eqf1, R.id.n_eqf2, R.id.n_eqf3, R.id.n_eqf4};
+                for (int id : ef) v.setInt(id, "setColorFilter", "modern".equals(skin) || "mp3".equals(skin) ? acc : ico);
+            }
+            if ("turntable".equals(skin)) {
+                v.setViewVisibility(R.id.n_spin, playing ? android.view.View.VISIBLE : android.view.View.GONE);
+                v.setViewVisibility(R.id.n_disc, playing ? android.view.View.GONE : android.view.View.VISIBLE);
+            }
             v.setInt(R.id.n_fill, "setImageLevel", dur > 0 ? (int) Math.min(10000, pos * 10000 / dur) : 0);
             v.setInt(R.id.n_fill, "setColorFilter", acc);
             v.setTextColor(R.id.n_cur, sub);

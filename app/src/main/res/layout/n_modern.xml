@@ -12,6 +12,14 @@
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="3dp">
             <Chronometer android:id="@+id/n_cur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:textColor="#B3FFFFFF"/>
             <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+            <ViewFlipper android:id="@+id/n_eq" android:layout_width="28dp" android:layout_height="14dp" android:autoStart="true" android:flipInterval="150">
+                <ImageView android:id="@+id/n_eqf0" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq0"/>
+                <ImageView android:id="@+id/n_eqf1" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq1"/>
+                <ImageView android:id="@+id/n_eqf2" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq2"/>
+                <ImageView android:id="@+id/n_eqf3" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq3"/>
+                <ImageView android:id="@+id/n_eqf4" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq4"/>
+            </ViewFlipper>
+            <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
             <TextView android:id="@+id/n_dur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:textColor="#B3FFFFFF"/>
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center">

@@ -245,7 +245,8 @@ public class PlaybackService extends Service {
     }
 
     Notification build() {
-        if ("skin".equals(mode)) {
+        boolean safe = getSharedPreferences("crash", MODE_PRIVATE).getBoolean("safe", false);
+        if ("skin".equals(mode) && !safe) {
             try {
                 return buildSkin();
             } catch (Exception e) {

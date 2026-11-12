@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
     static final int REQ_NOTIF = 2;
 
     static MainActivity inst;
+    static String lastMode = null;
 
     WebView web;
     ValueCallback<Uri[]> chooser;
@@ -177,6 +178,10 @@ public class MainActivity extends Activity {
         String last = sp.getString("last", null);
         if (last != null) {
             sp.edit().remove("last").apply();
+            if (last.contains("BadForegroundServiceNotification")) {
+                sp.edit().putBoolean("safe", true).apply();
+                last = "La notificación con diseño propio falló y quedó en modo seguro (notificación estándar). Para volver a probarla, apaga y enciende \"La notificación se ve como mi reproductor\" en Personalizar.\n\n" + last;
+            }
             try {
                 new AlertDialog.Builder(this).setTitle("Aurora se cerró (error)").setMessage(last).setPositiveButton("OK", null).show();
             } catch (Exception ignored) {
@@ -272,7 +277,13 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setState(String json) {
             try {
-                final boolean lk = new org.json.JSONObject(json).optBoolean("lock", true);
+                org.json.JSONObject jo = new org.json.JSONObject(json);
+                final boolean lk = jo.optBoolean("lock", true);
+                String md = jo.optString("mode", "system");
+                if ("skin".equals(md) && "system".equals(lastMode)) {
+                    getSharedPreferences("crash", MODE_PRIVATE).edit().putBoolean("safe", false).apply();
+                }
+                lastMode = md;
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="140dp" android:orientation="horizontal" android:gravity="center_vertical" android:paddingStart="8dp" android:paddingEnd="12dp" android:paddingTop="6dp" android:paddingBottom="6dp">
     <FrameLayout android:layout_width="150dp" android:layout_height="128dp">
-        <ImageView android:layout_width="124dp" android:layout_height="124dp" android:layout_gravity="center_vertical|start" android:scaleType="fitCenter" android:src="@drawable/n_vinyl"/>
+        <ImageView android:id="@+id/n_disc" android:layout_width="124dp" android:layout_height="124dp" android:layout_gravity="center_vertical|start" android:scaleType="fitCenter" android:src="@drawable/n_vinyl"/>
+        <ViewFlipper android:id="@+id/n_spin" android:layout_width="124dp" android:layout_height="124dp" android:layout_gravity="center_vertical|start" android:autoStart="true" android:flipInterval="90">
+            <ImageView android:layout_width="124dp" android:layout_height="124dp" android:scaleType="fitCenter" android:src="@drawable/n_vinyl"/>
+            <ImageView android:layout_width="124dp" android:layout_height="124dp" android:scaleType="fitCenter" android:src="@drawable/n_vinyl_r1"/>
+            <ImageView android:layout_width="124dp" android:layout_height="124dp" android:scaleType="fitCenter" android:src="@drawable/n_vinyl_r2"/>
+            <ImageView android:layout_width="124dp" android:layout_height="124dp" android:scaleType="fitCenter" android:src="@drawable/n_vinyl_r3"/>
+            <ImageView android:layout_width="124dp" android:layout_height="124dp" android:scaleType="fitCenter" android:src="@drawable/n_vinyl_r4"/>
+            <ImageView android:layout_width="124dp" android:layout_height="124dp" android:scaleType="fitCenter" android:src="@drawable/n_vinyl_r5"/>
+        </ViewFlipper>
         <ImageView android:id="@+id/n_cover" android:layout_width="52dp" android:layout_height="52dp" android:layout_marginStart="36dp" android:layout_gravity="center_vertical|start" android:scaleType="centerCrop"/>
         <ImageView android:id="@+id/n_arm" android:layout_width="50dp" android:layout_height="92dp" android:layout_gravity="top|end" android:scaleType="fitXY" android:src="@drawable/n_arm_off"/>
     </FrameLayout>
@@ -15,6 +23,14 @@
         </FrameLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="3dp">
             <Chronometer android:id="@+id/n_cur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:textColor="#B3FFFFFF"/>
+            <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+            <ViewFlipper android:id="@+id/n_eq" android:layout_width="28dp" android:layout_height="14dp" android:autoStart="true" android:flipInterval="150">
+                <ImageView android:id="@+id/n_eqf0" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq0"/>
+                <ImageView android:id="@+id/n_eqf1" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq1"/>
+                <ImageView android:id="@+id/n_eqf2" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq2"/>
+                <ImageView android:id="@+id/n_eqf3" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq3"/>
+                <ImageView android:id="@+id/n_eqf4" android:layout_width="28dp" android:layout_height="14dp" android:scaleType="fitXY" android:src="@drawable/n_eq4"/>
+            </ViewFlipper>
             <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
             <TextView android:id="@+id/n_dur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="11sp" android:textColor="#B3FFFFFF"/>
         </LinearLayout>

@@ -10,6 +10,18 @@ import android.widget.RemoteViews;
 
 /** Widget de la pantalla de inicio: se ve como el reproductor que estes usando. */
 public class AuroraWidget extends AppWidgetProvider {
+    static final String ACTION = "com.aurora.music.WIDGET_CMD";
+
+    @Override
+    public void onReceive(Context c, Intent i) {
+        if (ACTION.equals(i.getAction())) {
+            String cmd = i.getStringExtra("c");
+            if (cmd != null && MainActivity.inst != null) MainActivity.command(cmd);
+            return;
+        }
+        super.onReceive(c, i);
+    }
+
     @Override
     public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
         refresh(c);
