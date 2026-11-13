@@ -169,12 +169,20 @@ class SkinUi {
         v.setOnClickPendingIntent(R.id.n_play, click("toggle", 12, widget));
         v.setOnClickPendingIntent(R.id.n_next, click("next", 13, widget));
         if (full) {
-            if (!"display".equals(skin)) {
+            boolean hasEq = "modern".equals(skin) || "turntable".equals(skin) || "mp3".equals(skin) || "retro".equals(skin);
+            if (hasEq) {
                 v.setViewVisibility(R.id.n_eq, playing ? android.view.View.VISIBLE : android.view.View.INVISIBLE);
                 int[] ef = {R.id.n_eqf0, R.id.n_eqf1, R.id.n_eqf2, R.id.n_eqf3, R.id.n_eqf4};
                 for (int id : ef) v.setInt(id, "setColorFilter", "modern".equals(skin) || "mp3".equals(skin) ? acc : ico);
             }
-            if ("turntable".equals(skin)) {
+            if ("cassette".equals(skin)) {
+                int on = playing ? android.view.View.VISIBLE : android.view.View.GONE, off = playing ? android.view.View.GONE : android.view.View.VISIBLE;
+                v.setViewVisibility(R.id.n_spinL, on);
+                v.setViewVisibility(R.id.n_spinR, on);
+                v.setViewVisibility(R.id.n_reelL, off);
+                v.setViewVisibility(R.id.n_reelR, off);
+            }
+            if ("turntable".equals(skin) || "cd".equals(skin)) {
                 v.setViewVisibility(R.id.n_spin, playing ? android.view.View.VISIBLE : android.view.View.GONE);
                 v.setViewVisibility(R.id.n_disc, playing ? android.view.View.GONE : android.view.View.VISIBLE);
             }
@@ -190,6 +198,9 @@ class SkinUi {
     int bg() {
         if ("turntable".equals(skin)) return 0xFFD9DCE0;
         if ("retro".equals(skin)) return 0xFFD5D7DB;
+        if ("cassette".equals(skin)) return 0xFFE6DFCB;
+        if ("cd".equals(skin)) return 0xFFD8DCE0;
+        if ("radio".equals(skin)) return 0xFF5A3418;
         if ("mp3".equals(skin) || "display".equals(skin)) return 0xFF000000;
         return mix(acc, 0xFF0B0B0F, 0.72f);
     }
@@ -198,7 +209,7 @@ class SkinUi {
     void applyBg(RemoteViews v, boolean bodyIsBg) {
         if (bodyIsBg && ("display".equals(skin) && dpng != null)) {
             v.setViewVisibility(R.id.n_bg, android.view.View.GONE);
-        } else if (bodyIsBg && ("mp3".equals(skin) || "retro".equals(skin))) {
+        } else if (bodyIsBg && ("mp3".equals(skin) || "retro".equals(skin) || "cassette".equals(skin) || "cd".equals(skin) || "radio".equals(skin))) {
             v.setViewVisibility(R.id.n_bg, android.view.View.GONE);
         } else {
             v.setInt(R.id.n_bg, "setColorFilter", bg());
@@ -223,6 +234,18 @@ class SkinUi {
             txt = 0xFF0D1C28; sub = 0xFF0D1C28; ico = 0xFF2A2A2E;
             big = new RemoteViews(pk, R.layout.n_retro);
             cr = 0.0f; cdp = 40;
+        } else if ("cassette".equals(skin)) {
+            txt = 0xFF26303D; sub = 0xFFE8DCC2; ico = 0xFF2B2B2B;
+            big = new RemoteViews(pk, R.layout.n_cassette);
+            cr = 0.06f; cdp = 34;
+        } else if ("cd".equals(skin)) {
+            txt = 0xFF1B2A17; sub = 0xFF1B2A17; ico = 0xFF2A2D31;
+            big = new RemoteViews(pk, R.layout.n_cd);
+            cr = 0.5f; cdp = 46;
+        } else if ("radio".equals(skin)) {
+            txt = 0xFF3A2410; sub = 0xFF3A2410; ico = 0xFF2A1C10;
+            big = new RemoteViews(pk, R.layout.n_radio);
+            cr = 0.0f; cdp = 1;
         } else if ("display".equals(skin)) {
             txt = dcol; ico = dcol;
             big = new RemoteViews(pk, R.layout.n_display);
@@ -241,9 +264,12 @@ class SkinUi {
         int txt = 0xFFFFFFFF, sub = 0xB3FFFFFF, ico = 0xFFFFFFFF;
         if ("turntable".equals(skin)) { txt = 0xFF1B1B1F; sub = 0xFF55585E; ico = 0xFF2A2A2E; }
         else if ("retro".equals(skin)) { txt = 0xFF0D1C28; sub = 0xFF0D1C28; ico = 0xFF2A2A2E; }
+        else if ("cassette".equals(skin)) { txt = 0xFF26303D; sub = 0xFF5A6575; ico = 0xFF2B2B2B; }
+        else if ("cd".equals(skin)) { txt = 0xFF1B2A17; sub = 0xFF3A4A36; ico = 0xFF2A2D31; }
+        else if ("radio".equals(skin)) { txt = 0xFFF2E8CB; sub = 0xFFD8C89B; ico = 0xFFF2E8CB; }
         else if ("display".equals(skin)) { txt = dcol; ico = dcol; }
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.n_small);
-        common(v, txt, sub, ico, "turntable".equals(skin) ? 0.5f : 0.12f, 48, false, widget);
+        common(v, txt, sub, ico, "turntable".equals(skin) || "cd".equals(skin) ? 0.5f : 0.12f, 48, false, widget);
         applyBg(v, false);
         return v;
     }

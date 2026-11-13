@@ -77,7 +77,7 @@ const DEF = { lang: (navigator.language || 'en').slice(0, 2), skin: 'modern', th
     mp3: { lcd: 'green', finish: 'gloss', auto: true, body: '#c85a5a', cover: true },
     display: { layout: 'clock', art: 'cover', png: null, pngN: null, autoN: true, key: 'off', keyT: 30, fit: 'contain', color: '#ffffff', font: 'Syncopate', lines: true, dim: 25, round: 0, h24: false }
   },
-  stickers: { modern: [], turntable: [], mp3: [], display: [], retro: [] } };
+  stickers: { modern: [], turntable: [], mp3: [], display: [], retro: [], cassette: [], cd: [], radio: [] } };
 // Fusiona opciones nuevas con las guardadas por versiones anteriores
 const normalizeS = saved => {
   const o = { ...JSON.parse(JSON.stringify(DEF)), ...(saved || {}) };
@@ -85,7 +85,7 @@ const normalizeS = saved => {
   o.look = o.look || {};
   for (const k of Object.keys(DEF.look)) o.look[k] = { ...DEF.look[k], ...(o.look[k] || {}) };
   o.stickers = o.stickers || {};
-  for (const k of ['modern', 'turntable', 'mp3', 'display', 'retro']) if (!Array.isArray(o.stickers[k])) o.stickers[k] = [];
+  for (const k of ['modern', 'turntable', 'mp3', 'display', 'retro', 'cassette', 'cd', 'radio']) if (!Array.isArray(o.stickers[k])) o.stickers[k] = [];
   return o;
 };
 let hadSaved = false;
@@ -231,6 +231,9 @@ const ICONS = {
   menu: `<path ${st} d="M4 7h16M4 12h16M4 17h16"/>`,
   expand: `<path ${st} d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>`,
   vinyl: `<circle cx="12" cy="12" r="9" ${st}/><circle cx="12" cy="12" r="3" ${st}/><path ${st} d="M12 3v2"/>`,
+  cassette: `<rect x="3" y="6" width="18" height="12" rx="2" ${st}/><circle cx="9" cy="12" r="2" ${st}/><circle cx="15" cy="12" r="2" ${st}/><path d="M7 16h10" ${st}/>`,
+  cdp: `<circle cx="12" cy="12" r="8.5" ${st}/><circle cx="12" cy="12" r="2.2" ${st}/>`,
+  radio: `<rect x="3" y="7" width="18" height="12" rx="2" ${st}/><path d="M7 7l9-4" ${st}/><circle cx="16.5" cy="13" r="2.6" ${st}/><path d="M6 11h5M6 14h5" ${st}/>`,
   retro: `<rect x="3" y="5" width="18" height="14" rx="3" ${st}/><rect x="6" y="8" width="12" height="5" rx=".8" ${st}/><circle cx="9" cy="16" r=".6" ${st}/><circle cx="12" cy="16" r=".6" ${st}/><circle cx="15" cy="16" r=".6" ${st}/>`,
   mp3: `<rect x="6" y="2.5" width="12" height="19" rx="3" ${st}/><rect x="8.5" y="5" width="7" height="5" rx="1" ${st}/><circle cx="12" cy="15.5" r="3" ${st}/>`,
   pip: `<rect x="3" y="5" width="18" height="14" rx="2" ${st}/><rect x="12" y="11" width="7" height="6" rx="1"/>`
@@ -565,6 +568,30 @@ async function skinArt(tr) {
       g.fillStyle = '#e6e6e6'; const tri = (x, y, d) => { g.beginPath(); g.moveTo(x, y - 9); g.lineTo(x + 14 * d, y); g.lineTo(x, y + 9); g.fill(); };
       tri(298, 270, -1); tri(414, 270, 1); tri(344, 346, 1); g.fillRect(364, 337, 4, 18);
       g.fillStyle = '#c8c8cc'; g.fillRect(40, 340, 188, 3); g.fillStyle = acc; g.fillRect(40, 340, 90, 3);
+    } else if (sk === 'cassette') {
+      g.fillStyle = '#17120e'; g.fillRect(0, 0, N, N);
+      g.fillStyle = lin('#eee8d8', '#c8bfa6', 70, 410); rr(20, 80, 440, 320, 26); g.fill();
+      g.fillStyle = '#f8f4e7'; rr(40, 100, 400, 110, 10); g.fill(); g.fillStyle = acc; g.fillRect(40, 100, 400, 20);
+      art(46, 128, 70, 70, 6); g.fillStyle = '#9aa3b0'; g.fillRect(132, 150, 230, 6); g.fillRect(132, 172, 150, 5);
+      g.fillStyle = '#1c1713'; rr(48, 222, 384, 112, 50); g.fill();
+      for (const cx of [130, 350]) { g.fillStyle = '#3a281b'; g.beginPath(); g.arc(cx, 278, 40, 0, 7); g.fill(); g.fillStyle = '#efefef'; g.beginPath(); g.arc(cx, 278, 26, 0, 7); g.fill(); g.fillStyle = '#3d3d3d'; for (let a = 0; a < 6; a++) { g.beginPath(); g.moveTo(cx, 278); g.arc(cx, 278, 26, a * 1.047, a * 1.047 + .52); g.fill(); } g.fillStyle = '#17120e'; g.beginPath(); g.arc(cx, 278, 10, 0, 7); g.fill(); }
+      g.fillStyle = acc; g.fillRect(190, 276, 100, 4);
+      g.fillStyle = lin('#f4f4f2', '#b9b9b4', 346, 386); for (const x of [92, 190, 330]) { rr(x, 346, x === 190 ? 100 : 60, 40, 6); g.fill(); }
+    } else if (sk === 'cd') {
+      g.fillStyle = lin('#f1f2f4', '#9aa0a8', 0, N); g.fillRect(0, 0, N, N);
+      const cg = g.createRadialGradient(190, 150, 20, 240, 220, 220); cg.addColorStop(0, '#dfe3e8'); cg.addColorStop(.5, '#8f99a7'); cg.addColorStop(1, '#d6dae0');
+      g.fillStyle = '#20252a'; g.beginPath(); g.arc(240, 220, 214, 0, 7); g.fill(); g.fillStyle = cg; g.beginPath(); g.arc(240, 220, 196, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 14; g.beginPath(); g.arc(240, 220, 150, 3.6, 4.5); g.stroke(); g.beginPath(); g.arc(240, 220, 150, .5, 1.4); g.stroke();
+      art(240 - 88, 220 - 88, 176, 176, 0, true); g.fillStyle = '#2a2e33'; g.beginPath(); g.arc(240, 220, 24, 0, 7); g.fill(); g.strokeStyle = '#d3d7dc'; g.lineWidth = 6; g.stroke();
+      g.fillStyle = '#a3b891'; rr(60, 410, 360, 36, 8); g.fill(); g.fillStyle = '#1b2a17'; g.fillRect(74, 438, 332, 4); g.fillRect(74, 438, 120, 4);
+    } else if (sk === 'radio') {
+      g.fillStyle = '#17110b'; g.fillRect(0, 0, N, N);
+      g.fillStyle = lin('#94603a', '#4f2d18', 90, 390); rr(14, 90, 452, 300, 26); g.fill();
+      g.fillStyle = '#2c1b0e'; rr(34, 110, 128, 260, 10); g.fill(); g.strokeStyle = '#c9a36a'; g.lineWidth = 4; g.stroke(); g.fillStyle = '#44301c'; for (let y = 120; y < 360; y += 14) g.fillRect(40, y, 116, 6);
+      g.fillStyle = lin('#f2e8cb', '#d8c89b', 110, 290); rr(178, 110, 270, 170, 10); g.fill(); g.strokeStyle = '#c9a36a'; g.lineWidth = 4; g.stroke();
+      g.fillStyle = '#3a2410'; for (let x = 194; x < 434; x += 10) g.fillRect(x, 140, 2, x % 40 === 4 ? 16 : 9); g.fillRect(194, 162, 240, 2);
+      art(194, 184, 70, 70, 6); g.fillStyle = '#c0392b'; g.fillRect(300, 122, 5, 150);
+      for (const [cx, r] of [[236, 26], [312, 34], [388, 26]]) { const kg = g.createRadialGradient(cx - 8, 330 - 8, 4, cx, 330, r); kg.addColorStop(0, '#f2efe6'); kg.addColorStop(1, '#7d7259'); g.fillStyle = kg; g.beginPath(); g.arc(cx, 330, r, 0, 7); g.fill(); }
     } else if (sk === 'display') {
       g.fillStyle = '#000'; g.fillRect(0, 0, N, N);
       if (dimg) { const s = Math.min(N / dimg.width, N / dimg.height); g.drawImage(dimg, (N - dimg.width * s) / 2, (N - dimg.height * s) / 2, dimg.width * s, dimg.height * s); }
@@ -966,7 +993,12 @@ function applyLook() {
   b.classList.toggle('noled', !L.turntable.led); b.classList.toggle('noaura', !L.modern.aura);
   b.classList.toggle('nocover', !L.mp3.cover);
   const D = L.display; b.dataset.dart = D.art; b.dataset.dfit = D.fit; b.dataset.dlay = D.layout; b.classList.toggle('dsp-nolines', !D.lines);
-  r.style.setProperty('--dc', D.color); r.style.setProperty('--ddim', D.dim / 100); r.style.setProperty('--dr', D.round + 'px');
+  r.style.setProperty('--dc', D.color);
+  { // halo automático: claro si el texto es oscuro, oscuro si es claro (para que siempre se lea sobre tu PNG)
+    const hx = String(D.color || '#fff').replace('#', ''), f = hx.length === 3 ? hx.replace(/./g, m => m + m) : hx.padEnd(6, 'f');
+    const lum = (parseInt(f.slice(0, 2), 16) * .299 + parseInt(f.slice(2, 4), 16) * .587 + parseInt(f.slice(4, 6), 16) * .114) / 255;
+    r.style.setProperty('--dh', lum < .5 ? 'rgba(255,255,255,.62)' : 'rgba(0,0,0,.7)');
+  } r.style.setProperty('--ddim', D.dim / 100); r.style.setProperty('--dr', D.round + 'px');
   r.style.setProperty('--dfont', `'${D.font}',system-ui,"Segoe UI",sans-serif`);
   dspFont(); applyDspArt(); renderDisplay.k = ''; renderDisplay();
   r.style.setProperty('--woodc', L.turntable.woodColor);
@@ -983,10 +1015,10 @@ function applyLook() {
 
 /* ---------- Ventana flotante (mini reproductor) ---------- */
 // En la app de escritorio el reproductor flotante es un "widget" sin marco: el tamaño sale del aparato elegido y de la escala del usuario
-const WIDGET_BASE = { modern: { w: 380, h: 640 }, turntable: { w: 470, h: 536 }, mp3: { w: 340, h: 512 }, retro: { w: 460, h: 340 }, display: { w: 380, h: 475 } };
+const WIDGET_BASE = { modern: { w: 380, h: 640 }, turntable: { w: 470, h: 536 }, mp3: { w: 340, h: 512 }, retro: { w: 460, h: 340 }, cassette: { w: 460, h: 360 }, cd: { w: 440, h: 440 }, radio: { w: 480, h: 330 }, display: { w: 380, h: 475 } };
 const pipSize = () => {
   if (DESK) { const b = WIDGET_BASE[S.skin] || WIDGET_BASE.modern, k = clamp(S.wsize || 100, 60, 160) / 100; return { w: Math.round(b.w * k), h: Math.round(b.h * k) }; }
-  return S.skin === 'retro' ? { w: 480, h: 420 } : S.skin === 'display' ? { w: 400, h: 500 } : S.skin === 'mp3' ? { w: 340, h: 600 } : S.skin === 'turntable' ? { w: 440, h: 620 } : { w: 420, h: 680 };
+  return ['retro', 'cassette', 'radio'].includes(S.skin) ? { w: 480, h: 420 } : S.skin === 'cd' ? { w: 460, h: 480 } : S.skin === 'display' ? { w: 400, h: 500 } : S.skin === 'mp3' ? { w: 340, h: 600 } : S.skin === 'turntable' ? { w: 440, h: 620 } : { w: 420, h: 680 };
 };
 function resizePip() {
   if (!pipWin) return;
@@ -1029,6 +1061,9 @@ async function openPip() {
         <button data-v="mp3" data-ico="mp3" title="${esc(T('s3'))}" aria-label="${esc(T('s3'))}"></button>
         <button data-v="display" data-ico="clock" title="${esc(T('s4'))}" aria-label="${esc(T('s4'))}"></button>
         <button data-v="retro" data-ico="retro" title="${esc(T('s5'))}" aria-label="${esc(T('s5'))}"></button>
+        <button data-v="cassette" data-ico="cassette" title="${esc(T('s6'))}" aria-label="${esc(T('s6'))}"></button>
+        <button data-v="cd" data-ico="cdp" title="${esc(T('s7'))}" aria-label="${esc(T('s7'))}"></button>
+        <button data-v="radio" data-ico="radio" title="${esc(T('s8'))}" aria-label="${esc(T('s8'))}"></button>
       </div>
       <button class="wbtn" data-w="smaller" data-ico="minus" title="${esc(T('wSmaller'))}" aria-label="${esc(T('wSmaller'))}"></button>
       <button class="wbtn" data-w="bigger" data-ico="plus" title="${esc(T('wBigger'))}" aria-label="${esc(T('wBigger'))}"></button>
@@ -1037,7 +1072,7 @@ async function openPip() {
     </div>`;
     hydrate(wrap);
   } else {
-    wrap.innerHTML = `<div class="chips pipchips" data-set="skin"><button data-v="modern" data-i18n="s1"></button><button data-v="turntable" data-i18n="s2"></button><button data-v="mp3" data-i18n="s3"></button><button data-v="display" data-i18n="s4"></button><button data-v="retro" data-i18n="s5"></button></div>`;
+    wrap.innerHTML = `<div class="chips pipchips" data-set="skin"><button data-v="modern" data-i18n="s1"></button><button data-v="turntable" data-i18n="s2"></button><button data-v="mp3" data-i18n="s3"></button><button data-v="display" data-i18n="s4"></button><button data-v="retro" data-i18n="s5"></button><button data-v="cassette" data-i18n="s6"></button><button data-v="cd" data-i18n="s7"></button><button data-v="radio" data-i18n="s8"></button></div>`;
     $$('[data-i18n]', wrap).forEach(e => { e.textContent = T(e.dataset.i18n); });
   }
   d.body.appendChild(wrap); wrap.appendChild(stageEl);

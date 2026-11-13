@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/n_root" android:layout_width="match_parent" android:layout_height="wrap_content">
+    <ImageView android:id="@+id/n_bg" android:layout_width="match_parent" android:layout_height="match_parent" android:scaleType="fitXY" android:src="@drawable/n_rr"/>
+    <LinearLayout android:id="@+id/n_inner" android:layout_width="match_parent" android:layout_height="156dp" android:orientation="horizontal" android:gravity="center_vertical" android:padding="10dp" android:layout_margin="4dp" android:background="@drawable/n_cd_body">
+        <FrameLayout android:layout_width="116dp" android:layout_height="116dp">
+            <ImageView android:id="@+id/n_disc" android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd"/>
+            <ViewFlipper android:id="@+id/n_spin" android:layout_width="116dp" android:layout_height="116dp" android:autoStart="true" android:flipInterval="90">
+                <ImageView android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd"/><ImageView android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd_r1"/><ImageView android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd_r2"/><ImageView android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd_r3"/><ImageView android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd_r4"/><ImageView android:layout_width="116dp" android:layout_height="116dp" android:scaleType="fitCenter" android:src="@drawable/n_cd_r5"/>
+            </ViewFlipper>
+            <ImageView android:id="@+id/n_cover" android:layout_width="46dp" android:layout_height="46dp" android:layout_gravity="center" android:scaleType="centerCrop"/>
+        </FrameLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="10dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:padding="7dp" android:background="@drawable/n_cd_lcd">
+                <TextView android:id="@+id/n_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:ellipsize="end" android:fontFamily="monospace" android:textStyle="bold" android:textSize="13sp" android:textColor="#FF1B2A17"/>
+                <TextView android:id="@+id/n_artist" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:ellipsize="end" android:fontFamily="monospace" android:textSize="11sp" android:textColor="#FF1B2A17"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+                <FrameLayout android:layout_width="match_parent" android:layout_height="3dp">
+                <ImageView android:layout_width="match_parent" android:layout_height="3dp" android:scaleType="fitXY" android:src="@drawable/n_bar_track"/>
+                <ImageView android:id="@+id/n_fill" android:layout_width="match_parent" android:layout_height="3dp" android:scaleType="fitXY" android:src="@drawable/n_bar_fill"/>
+            </FrameLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="2dp">
+                <Chronometer android:id="@+id/n_cur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:textSize="11sp" android:textColor="#FF1B2A17"/>
+                <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+                <TextView android:id="@+id/n_dur" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:textSize="11sp" android:textColor="#FF1B2A17"/>
+            </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center" android:layout_marginTop="6dp">
+                <ImageView android:id="@+id/n_prev" android:layout_width="38dp" android:layout_height="38dp" android:padding="10dp" android:src="@drawable/n_prev" android:background="@drawable/n_retro_btn"/>
+                <ImageView android:id="@+id/n_play" android:layout_width="44dp" android:layout_height="44dp" android:padding="11dp" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:src="@drawable/n_play" android:background="@drawable/n_retro_btn"/>
+                <ImageView android:id="@+id/n_next" android:layout_width="38dp" android:layout_height="38dp" android:padding="10dp" android:src="@drawable/n_next" android:background="@drawable/n_retro_btn"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

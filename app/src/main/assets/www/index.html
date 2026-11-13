@@ -73,6 +73,9 @@
           <button data-v="mp3" data-i18n="s3"></button>
           <button data-v="display" data-i18n="s4"></button>
           <button data-v="retro" data-i18n="s5"></button>
+          <button data-v="cassette" data-i18n="s6"></button>
+          <button data-v="cd" data-i18n="s7"></button>
+          <button data-v="radio" data-i18n="s8"></button>
         </div>
         <div class="row wrap">
           <button class="btn" id="btn-clean"><span data-ico="expand"></span><span data-i18n="clean"></span></button>
@@ -178,6 +181,83 @@
                 <button class="wb center b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
               </div>
               <div class="stk-layer" data-stk="mp3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin Cassette -->
+        <div class="skin skin-cassette">
+          <div class="caswrap">
+            <div class="cas">
+              <div class="cs-label">
+                <i class="cs-stripe"></i>
+                <div class="cs-hand marquee"><span class="b-title"></span></div>
+                <div class="cs-art b-artist"></div>
+                <img class="cs-cov b-cover" alt="">
+              </div>
+              <div class="cs-win">
+                <div class="reel l"><i class="pack"></i><i class="hub"></i></div>
+                <div class="cs-mid"><span class="b-cur">0:00</span><span class="b-dur">0:00</span></div>
+                <div class="reel r"><i class="pack"></i><i class="hub"></i></div>
+                <input type="range" class="b-seek cs-seek" min="0" max="1000" value="0" aria-label="Seek">
+              </div>
+              <div class="cs-keys">
+                <button class="ck" data-act="prev" data-ico="prev" aria-label="Previous"></button>
+                <button class="ck big b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+                <button class="ck" data-act="next" data-ico="next" aria-label="Next"></button>
+              </div>
+              <div class="stk-layer" data-stk="cassette"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin CD (discman) -->
+        <div class="skin skin-cd">
+          <div class="cdwrap">
+            <div class="cdp">
+              <div class="cd-lid">
+                <div class="cd-disc"><img class="cd-lab b-cover" alt=""><i class="cd-hole"></i></div>
+              </div>
+              <div class="cd-lcd">
+                <span class="cd-trk"><i>&#9654;</i> <b class="b-cur">0:00</b></span>
+                <span class="cd-ti"><span class="b-title"></span></span>
+                <span class="cd-du b-dur">0:00</span>
+                <u class="cd-prog"><i class="b-bar"></i></u>
+                <input type="range" class="b-seek cd-seek" min="0" max="1000" value="0" aria-label="Seek">
+              </div>
+              <div class="cd-keys">
+                <button class="cdk" data-act="shuffle" data-ico="shuffle" aria-label="Shuffle"></button>
+                <button class="cdk" data-act="prev" data-ico="prev" aria-label="Previous"></button>
+                <button class="cdk big b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+                <button class="cdk" data-act="next" data-ico="next" aria-label="Next"></button>
+                <button class="cdk" data-act="repeat" data-ico="repeat" aria-label="Repeat"></button>
+              </div>
+              <div class="stk-layer" data-stk="cd"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skin Radio -->
+        <div class="skin skin-radio">
+          <div class="radwrap">
+            <div class="rad">
+              <div class="rd-grill"></div>
+              <div class="rd-main">
+                <div class="rd-dial">
+                  <div class="rd-scale"><span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span></div>
+                  <u class="rd-needle"></u>
+                  <div class="rd-name marquee"><span class="b-title"></span></div>
+                  <div class="rd-art b-artist"></div>
+                  <div class="rd-tm"><span class="b-cur">0:00</span><span class="b-dur">0:00</span></div>
+                  <input type="range" class="b-seek rd-seek" min="0" max="1000" value="0" aria-label="Seek">
+                </div>
+                <div class="rd-knobs">
+                  <button class="kn" data-act="prev" data-ico="prev" aria-label="Previous"></button>
+                  <button class="kn big b-play" data-act="toggle" data-ico="play" aria-label="Play"></button>
+                  <button class="kn" data-act="next" data-ico="next" aria-label="Next"></button>
+                </div>
+              </div>
+              <div class="stk-layer" data-stk="radio"></div>
             </div>
           </div>
         </div>
@@ -476,6 +556,9 @@
             <button data-v="mp3"><span data-ico="mp3"></span><span data-i18n="s3"></span></button>
             <button data-v="display"><span data-ico="clock"></span><span data-i18n="s4"></span></button>
             <button data-v="retro"><span data-ico="retro"></span><span data-i18n="s5"></span></button>
+            <button data-v="cassette"><span data-ico="cassette"></span><span data-i18n="s6"></span></button>
+            <button data-v="cd"><span data-ico="cdp"></span><span data-i18n="s7"></span></button>
+            <button data-v="radio"><span data-ico="radio"></span><span data-i18n="s8"></span></button>
           </div>
           <button class="btn pri" id="btn-open-decor"><span data-ico="brush"></span><span data-i18n="decorOpen"></span></button>
         </div>

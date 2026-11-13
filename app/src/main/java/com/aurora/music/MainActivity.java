@@ -51,6 +51,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         inst = this;
         installCrashLog();
+        setLock(false);
 
         web = new WebView(this);
         web.setBackgroundColor(0xFF0B0B0F);
