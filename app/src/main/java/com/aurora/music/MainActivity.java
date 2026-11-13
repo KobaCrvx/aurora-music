@@ -39,6 +39,7 @@ public class MainActivity extends Activity {
     static final String HOST = "aurora.app.local";
     static final int REQ_FILE = 1;
     static final int REQ_NOTIF = 2;
+    static final int REQ_TREE = 3;
 
     static MainActivity inst;
     static String lastMode = null;
@@ -75,6 +76,13 @@ public class MainActivity extends Activity {
                 Uri u = request.getUrl();
                 if (u == null || !HOST.equals(u.getHost())) return null;
                 String path = u.getPath();
+                if (path != null && path.startsWith(Library.PREFIX)) {
+                    Uri tree = treeUri();
+                    WebResourceResponse r = tree == null ? null : Library.open(MainActivity.this, tree, path, request.getRequestHeaders().get("Range"));
+                    if (r != null) return r;
+                    return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found",
+                            new HashMap<String, String>(), new ByteArrayInputStream(new byte[0]));
+                }
                 if (path == null || path.equals("/") || path.isEmpty()) path = "/index.html";
                 try {
                     InputStream in = getAssets().open("www" + path);
@@ -205,8 +213,85 @@ public class MainActivity extends Activity {
         return "application/octet-stream";
     }
 
+    Uri treeUri() {
+        String t = getSharedPreferences("lib", MODE_PRIVATE).getString("tree", null);
+        return t == null ? null : Uri.parse(t);
+    }
+
+    String treeName() {
+        Uri t = treeUri();
+        if (t == null) return "";
+        try {
+            String id = android.provider.DocumentsContract.getTreeDocumentId(t);
+            int k = id.lastIndexOf(':');
+            String n = k >= 0 ? id.substring(k + 1) : id;
+            return n.length() == 0 ? "Almacenamiento" : n;
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    void js(final String code) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (web != null) web.evaluateJavascript(code, null);
+            }
+        });
+    }
+
+    volatile boolean scanning = false;
+
+    /** Escanea la carpeta en segundo plano y manda a la pagina solo lo nuevo (con etiquetas y portada). */
+    void scan(final String knownJson) {
+        final Uri tree = treeUri();
+        if (tree == null || scanning) return;
+        scanning = true;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    java.util.HashSet<String> known = new java.util.HashSet<String>();
+                    try {
+                        org.json.JSONArray k = new org.json.JSONArray(knownJson);
+                        for (int i = 0; i < k.length(); i++) known.add(k.getString(i));
+                    } catch (Exception ignored) {
+                    }
+                    ArrayList<Library.Item> all = Library.list(MainActivity.this, tree);
+                    org.json.JSONArray batch = new org.json.JSONArray();
+                    for (Library.Item it : all) {
+                        if (known.contains(it.doc)) continue;
+                        batch.put(Library.itemJson(it, Library.meta(MainActivity.this, tree, it)));
+                        if (batch.length() >= 20) {
+                            js("window.auroraScanPart&&window.auroraScanPart(" + batch.toString() + ")");
+                            batch = new org.json.JSONArray();
+                        }
+                    }
+                    if (batch.length() > 0) js("window.auroraScanPart&&window.auroraScanPart(" + batch.toString() + ")");
+                    js("window.auroraScanDone&&window.auroraScanDone(" + Library.ids(all).toString() + ")");
+                } catch (Throwable e) {
+                    js("window.auroraScanDone&&window.auroraScanDone(null)");
+                } finally {
+                    scanning = false;
+                }
+            }
+        }).start();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQ_TREE) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                Uri t = data.getData();
+                try {
+                    getContentResolver().takePersistableUriPermission(t, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (Exception ignored) {
+                }
+                getSharedPreferences("lib", MODE_PRIVATE).edit().putString("tree", t.toString()).apply();
+                js("window.auroraFolder&&window.auroraFolder(" + org.json.JSONObject.quote(treeName()) + ")");
+            }
+            return;
+        }
         if (requestCode == REQ_FILE) {
             if (chooser != null) {
                 Uri[] r = null;
@@ -275,6 +360,36 @@ public class MainActivity extends Activity {
 
     /** Puente que usa la pagina para avisar que suena (titulo, artista, portada, estilo...). */
     class Bridge {
+        @JavascriptInterface
+        public void pickFolder() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+                        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                        startActivityForResult(i, REQ_TREE);
+                    } catch (Exception ignored) {
+                    }
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public String folder() {
+            return treeName();
+        }
+
+        @JavascriptInterface
+        public void scan(String knownJson) {
+            MainActivity.this.scan(knownJson);
+        }
+
+        @JavascriptInterface
+        public void forgetFolder() {
+            getSharedPreferences("lib", MODE_PRIVATE).edit().remove("tree").apply();
+        }
+
         @JavascriptInterface
         public void setState(String json) {
             try {

@@ -58,6 +58,90 @@ public class PlaybackService extends Service {
 
     static final Handler MAIN = new Handler(Looper.getMainLooper());
 
+    // ---- foco de audio (llamadas, otras apps) y audifonos desconectados ----
+    android.media.AudioManager am;
+    android.media.AudioFocusRequest focusReq;
+    boolean hasFocus = false, lostTransient = false, noisyOn = false;
+
+    final android.media.AudioManager.OnAudioFocusChangeListener focusL = new android.media.AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int ch) {
+            if (ch == android.media.AudioManager.AUDIOFOCUS_LOSS) {
+                lostTransient = false;
+                hasFocus = false;
+                MainActivity.command("pause");
+            } else if (ch == android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT || ch == android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                if (playing) {
+                    lostTransient = true;
+                    MainActivity.command("pause");
+                }
+            } else if (ch == android.media.AudioManager.AUDIOFOCUS_GAIN) {
+                if (lostTransient) {
+                    lostTransient = false;
+                    MainActivity.command("play");
+                }
+            }
+        }
+    };
+
+    final android.content.BroadcastReceiver noisy = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            if (android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(i.getAction())) MainActivity.command("pause");
+        }
+    };
+
+    void syncFocus() {
+        try {
+            if (am == null) am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (playing) {
+                if (!hasFocus) {
+                    int r;
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        if (focusReq == null) {
+                            focusReq = new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
+                                    .setAudioAttributes(new android.media.AudioAttributes.Builder()
+                                            .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                                            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC).build())
+                                    .setOnAudioFocusChangeListener(focusL).build();
+                        }
+                        r = am.requestAudioFocus(focusReq);
+                    } else {
+                        r = am.requestAudioFocus(focusL, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN);
+                    }
+                    hasFocus = r == android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+                }
+                if (!noisyOn) {
+                    registerReceiver(noisy, new android.content.IntentFilter(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+                    noisyOn = true;
+                }
+            } else {
+                if (noisyOn) {
+                    try {
+                        unregisterReceiver(noisy);
+                    } catch (Exception ignored) {
+                    }
+                    noisyOn = false;
+                }
+                // en una pausa temporal por llamada se conserva el foco para poder reanudar
+                if (hasFocus && !lostTransient) dropFocus();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    void dropFocus() {
+        try {
+            if (Build.VERSION.SDK_INT >= 26) {
+                if (focusReq != null) am.abandonAudioFocusRequest(focusReq);
+            } else {
+                am.abandonAudioFocus(focusL);
+            }
+        } catch (Throwable ignored) {
+        }
+        hasFocus = false;
+    }
+
     static void push(final Context c, final String json) {
         MAIN.post(new Runnable() {
             @Override
@@ -219,6 +303,7 @@ public class PlaybackService extends Service {
             }
         } catch (Throwable ignored) {
         }
+        syncFocus();
         if (playing) {
             if (!wl.isHeld()) wl.acquire(10 * 60 * 60 * 1000L);
         } else if (wl.isHeld()) {
@@ -329,6 +414,10 @@ public class PlaybackService extends Service {
         } catch (Throwable ignored) {
         }
         if (wl != null && wl.isHeld()) wl.release();
+        lostTransient = false;
+        playing = false;
+        syncFocus();
+        if (hasFocus) dropFocus();
         if (session != null) {
             session.setActive(false);
             session.release();

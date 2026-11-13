@@ -764,7 +764,7 @@ function applyI18n() {
   $$('[data-i18n]').forEach(e => e.textContent = T(e.dataset.i18n));
   $$('[data-i18n-ph]').forEach(e => e.placeholder = T(e.dataset.i18nPh));
   $$('[data-i18n-title]').forEach(e => e.title = T(e.dataset.i18nTitle));
-  renderLib(); renderPls(); if (view === 'pl') renderPl(); renderPlayerUI();
+  renderLib(); renderPls(); if (view === 'pl') renderPl(); renderPlayerUI(); if (typeof folderUI === 'function') folderUI();
 }
 
 /* ============ Eventos ============ */
@@ -1378,6 +1378,59 @@ function initExtras() {
   addEventListener('beforeunload', () => { try { if (pipWin) pipWin.close(); } catch { } });
 }
 
+
+/* ============ Carpeta de música (Android) ============ */
+const FOLD = { name: '', last: 0, added: 0 };
+function folderUI() {
+  const b = $('#btn-folder'); if (b) b.hidden = !(AND && AND.pickFolder);
+  const st = $('#folder-status'); if (st && AND && AND.pickFolder) st.textContent = FOLD.name ? T('folderSet') + ': ' + FOLD.name : T('folderNone');
+}
+function scanFolder(force) {
+  if (!AND || !AND.scan || !FOLD.name) return;
+  const now = Date.now(); if (!force && now - FOLD.last < 60000) return;
+  FOLD.last = now; FOLD.added = 0;
+  try { AND.scan(JSON.stringify(tracks.filter(t => t.saf).map(t => t.saf))); } catch { }
+}
+function dataUrlBlob(d) {
+  const i = d.indexOf(','), bin = atob(d.slice(i + 1)), u = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) u[k] = bin.charCodeAt(k);
+  return new Blob([u], { type: (d.slice(5, i).split(';')[0]) || 'image/jpeg' });
+}
+window.auroraFolder = name => { FOLD.name = name || ''; folderUI(); scanFolder(true); };
+window.auroraScanPart = async arr => {
+  for (const f of arr || []) {
+    if (tracks.some(t => t.saf === f.doc)) continue;
+    const base = String(f.name || '').replace(/\.[^.]+$/, ''), m = base.split(/\s[-–]\s/);
+    const tr = { id: uid(), title: f.title || (m.length > 1 ? m.slice(1).join(' - ').trim() : base), artist: f.artist || (m.length > 1 ? m[0].trim() : ''), url: f.p, saf: f.doc, dur: f.dur || 0, added: Date.now() };
+    if (f.cover) { try { tr.coverId = await putBlob(dataUrlBlob(f.cover)); } catch { } }
+    tracks.push(tr); await DB.put('tracks', tr); FOLD.added++;
+  }
+  await refreshAll();
+};
+window.auroraScanDone = async ids => {
+  let removed = 0;
+  // si la carpeta no responde (ids vacío) no se borra nada
+  if (ids && ids.length) {
+    const have = new Set(ids);
+    for (const t of tracks.filter(x => x.saf && !have.has(x.saf))) {
+      if (cur() && cur().id === t.id) continue;
+      tracks = tracks.filter(x => x.id !== t.id); dropBlob(t.coverId); await DB.del('tracks', t.id);
+      for (const p of pls) if (p.ids.includes(t.id)) { p.ids = p.ids.filter(x => x !== t.id); await DB.put('playlists', p); }
+      removed++;
+    }
+    if (removed) await refreshAll();
+  }
+  if (FOLD.added) toast(T('folderAdded') + ': ' + FOLD.added); else if (removed) toast(T('folderRemoved'));
+  FOLD.added = 0;
+};
+async function folderMenu() {
+  if (!FOLD.name) { AND.pickFolder(); return; }
+  const v = await pick(T('folderBtn') + ': ' + FOLD.name, [{ label: T('folderScan'), value: 'scan' }, { label: T('folderChange'), value: 'change' }, { label: T('folderForget'), value: 'forget', danger: true }]);
+  if (v === 'scan') { toast(T('folderNew')); scanFolder(true); }
+  else if (v === 'change') AND.pickFolder();
+  else if (v === 'forget') { try { AND.forgetFolder(); } catch { } FOLD.name = ''; folderUI(); }
+}
+
 /* ============ Arranque ============ */
 (async function boot() {
   // 1) ¿Hay copia en disco? Si el navegador no tiene ajustes (datos borrados, otra dirección), se restauran de ahí
@@ -1391,11 +1444,15 @@ function initExtras() {
   }
   if (/[?&]reset=1\b/.test(location.search)) { resetAppearance(); history.replaceState(null, '', location.pathname); }
   hydrate(); buildBars(); bind(); initExtras(); initUI(); initMediaSession();
+  try { if (AND && AND.folder) FOLD.name = AND.folder() || ''; } catch { }
+  const bf = $('#btn-folder'); if (bf) bf.onclick = folderMenu;
   applySettings(); applyI18n();
   try { tracks = await DB.all('tracks') || []; pls = await DB.all('playlists') || []; } catch { tracks = []; pls = []; }
   await syncDisk(idx);
   tracks.sort((a, b) => a.added - b.added);
   await refreshAll(); setVol(100); onTime(); renderStickers(); syncFake();
+  folderUI(); scanFolder(true);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) scanFolder(false); });
   go('lib');
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch { }
   // Órdenes de la miniatura de la barra de tareas de Windows (anterior / pausa / siguiente)
