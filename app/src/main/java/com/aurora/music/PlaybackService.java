@@ -95,22 +95,6 @@ public class PlaybackService extends Service {
         try {
             if (am == null) am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (playing) {
-                if (!hasFocus) {
-                    int r;
-                    if (Build.VERSION.SDK_INT >= 26) {
-                        if (focusReq == null) {
-                            focusReq = new android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
-                                    .setAudioAttributes(new android.media.AudioAttributes.Builder()
-                                            .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                                            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC).build())
-                                    .setOnAudioFocusChangeListener(focusL).build();
-                        }
-                        r = am.requestAudioFocus(focusReq);
-                    } else {
-                        r = am.requestAudioFocus(focusL, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN);
-                    }
-                    hasFocus = r == android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
-                }
                 if (!noisyOn) {
                     registerReceiver(noisy, new android.content.IntentFilter(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY));
                     noisyOn = true;
@@ -123,8 +107,6 @@ public class PlaybackService extends Service {
                     }
                     noisyOn = false;
                 }
-                // en una pausa temporal por llamada se conserva el foco para poder reanudar
-                if (hasFocus && !lostTransient) dropFocus();
             }
         } catch (Throwable ignored) {
         }
