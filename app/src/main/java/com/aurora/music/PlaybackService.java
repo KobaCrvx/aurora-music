@@ -320,12 +320,8 @@ public class PlaybackService extends Service {
 
     void refreshSkin() {
         try {
-            boolean safe = getSharedPreferences("crash", MODE_PRIVATE).getBoolean("safe", false);
-            if ("skin".equals(mode) && !safe) {
-                nm.notify(SKIN_ID, buildSkin());
-            } else {
-                nm.cancel(SKIN_ID);
-            }
+            // una sola tarjeta de musica: la del sistema (con la portada del reproductor elegido)
+            nm.cancel(SKIN_ID);
         } catch (Throwable ignored) {
         }
     }

@@ -1446,6 +1446,7 @@ async function folderMenu() {
   hydrate(); buildBars(); bind(); initExtras(); initUI(); initMediaSession();
   try { if (AND && AND.folder) FOLD.name = AND.folder() || ''; } catch { }
   const bf = $('#btn-folder'); if (bf) bf.onclick = folderMenu;
+  if (AND && !S.lockOff) { S.lockApp = false; S.lockOff = true; try { save(); } catch { } }
   applySettings(); applyI18n();
   try { tracks = await DB.all('tracks') || []; pls = await DB.all('playlists') || []; } catch { tracks = []; pls = []; }
   await syncDisk(idx);
