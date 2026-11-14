@@ -12,6 +12,8 @@
   };
   Object.assign(X.en, { folderBtn: "Music folder", folderPick: "Choose music folder", folderScan: "Scan now", folderChange: "Change folder", folderForget: "Stop using folder", folderSet: "Folder", folderNone: "No music folder chosen. Choose one and Aurora adds new songs automatically.", folderAdded: "New songs found", folderUpToDate: "Library is up to date", folderRemoved: "Removed songs that are gone from the folder", folderNew: "Scanning folder…" });
   Object.assign(X.es, { folderBtn: "Carpeta de música", folderPick: "Elegir carpeta de música", folderScan: "Escanear ahora", folderChange: "Cambiar carpeta", folderForget: "Dejar de usar la carpeta", folderSet: "Carpeta", folderNone: "No hay carpeta de música. Elige una y Aurora agrega las canciones nuevas automáticamente.", folderAdded: "Canciones nuevas encontradas", folderUpToDate: "La biblioteca está al día", folderRemoved: "Se quitaron canciones que ya no están en la carpeta", folderNew: "Escaneando carpeta…" });
+  Object.assign(X.en, { ntfSkin: "Music card artwork matches my player", ntfOwn: "Extra notification with my player's design (may show two players)" });
+  Object.assign(X.es, { ntfSkin: "La portada de la tarjeta de música usa mi reproductor", ntfOwn: "Notificación extra con el diseño de mi reproductor (puede mostrar dos reproductores)" });
   window.I18N_X = window.I18N_X || {};
   for (const l of Object.keys(X)) window.I18N_X[l] = Object.assign(window.I18N_X[l] || {}, X[l]);
 })();

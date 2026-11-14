@@ -70,7 +70,7 @@ if (window.I18N_X) for (const l of Object.keys(window.I18N_X)) Object.assign(I18
 const FONTS = ['System', 'Inter', 'Poppins', 'Montserrat', 'Playfair Display', 'Orbitron', 'Press Start 2P', 'Pacifico', 'Space Mono', 'Dancing Script', 'Bebas Neue'];
 const reduced = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } })();
 const DEF = { lang: (navigator.language || 'en').slice(0, 2), skin: 'modern', theme: 'dark', accent: '#1ed760', font: 'Inter', customFont: null, bgtype: 'none', bgcolor: '#14141c', bgblob: null, bgurl: '', dim: 35, blur: 0, anim: !reduced, trans: 'fade', vis: true, react: true,
-  jamendoId: '', ntfSkin: true, lockApp: false, wsize: 100, wfade: true, widle: 45, wsnap: true, ui: 100, radius: 16, panelA: 62, panelB: 14, density: 'normal', fxVig: false, fxGrain: false, immersive: true, speed: 100, stkLib: [],
+  jamendoId: '', ntfSkin: true, ntfOwn: false, lockApp: false, wsize: 100, wfade: true, widle: 45, wsnap: true, ui: 100, radius: 16, panelA: 62, panelB: 14, density: 'normal', fxVig: false, fxGrain: false, immersive: true, speed: 100, stkLib: [],
   look: {
     modern: { shape: 'round', aura: true },
     turntable: { wood: 'walnut', woodColor: '#6b4428', vinyl: 'black', lid: false, strobe: true, led: true, rpm: '33' },
@@ -629,7 +629,7 @@ async function pushAndroid(force) {
   const tr = cur(), playing = !audio.paused && !audio.ended;
   const d = audio.duration && isFinite(audio.duration) ? audio.duration : ((tr && tr.dur) || 0);
   const mode = S.ntfSkin === false ? 'system' : 'skin';
-  const key = [S.lockApp === true, playing, tr ? tr.id : '', S.skin, S.accent, mode, tr && tr.coverId || '', Math.round(d), S.look && S.look.display && S.look.display.color, mode === 'skin' && playing ? Math.floor(audio.currentTime / 3) : 0].join('|');
+  const key = [S.ntfOwn === true, S.lockApp === true, playing, tr ? tr.id : '', S.skin, S.accent, mode, tr && tr.coverId || '', Math.round(d), S.look && S.look.display && S.look.display.color, mode === 'skin' && playing ? Math.floor(audio.currentTime / 3) : 0].join('|');
   const pos = Math.round(audio.currentTime * 1000);
   if (!force && key === andLast) return;
   andBusy = true;
@@ -644,7 +644,7 @@ async function pushAndroid(force) {
     }
     andLast = key;
     const nice = x => String(x || '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
-    AND.setState(JSON.stringify(Object.assign({ playing, title: tr ? nice(tr.title) : '', artist: tr ? nice(tr.artist) : '', dur: Math.round(d * 1000), pos, mode, lock: S.lockApp === true, skin: S.skin, acc: S.accent || '#1ed760', dcol: (S.look && S.look.display && S.look.display.color) || '#ffffff' }, o)));
+    AND.setState(JSON.stringify(Object.assign({ playing, title: tr ? nice(tr.title) : '', artist: tr ? nice(tr.artist) : '', dur: Math.round(d * 1000), pos, mode, own: S.ntfOwn === true, lock: S.lockApp === true, skin: S.skin, acc: S.accent || '#1ed760', dcol: (S.look && S.look.display && S.look.display.color) || '#ffffff' }, o)));
   } catch { } finally { andBusy = false; }
 }
 if (AND) { audio.addEventListener('seeked', () => pushAndroid(true)); setInterval(() => pushAndroid(false), 1000); }

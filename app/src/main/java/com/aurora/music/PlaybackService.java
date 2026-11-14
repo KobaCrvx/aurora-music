@@ -54,6 +54,7 @@ public class PlaybackService extends Service {
     long dur = 0, pos = 0;
     Bitmap art, cover, dpng;
     String mode = "system", skin = "modern";
+    boolean own = false;
     int acc = 0xFF1ED760, dcol = 0xFFFFFFFF;
 
     static final Handler MAIN = new Handler(Looper.getMainLooper());
@@ -230,6 +231,7 @@ public class PlaybackService extends Service {
         this.dur = o.optLong("dur");
         this.pos = o.optLong("pos");
         this.mode = o.optString("mode", "system");
+        this.own = o.optBoolean("own", false);
         this.skin = o.optString("skin", "modern");
         try {
             this.acc = Color.parseColor(o.optString("acc", "#1ed760"));
@@ -320,8 +322,12 @@ public class PlaybackService extends Service {
 
     void refreshSkin() {
         try {
-            // una sola tarjeta de musica: la del sistema (con la portada del reproductor elegido)
-            nm.cancel(SKIN_ID);
+            boolean safe = getSharedPreferences("crash", MODE_PRIVATE).getBoolean("safe", false);
+            if (own && "skin".equals(mode) && !safe) {
+                nm.notify(SKIN_ID, buildSkin());
+            } else {
+                nm.cancel(SKIN_ID);
+            }
         } catch (Throwable ignored) {
         }
     }
